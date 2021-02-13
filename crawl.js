@@ -1,35 +1,18 @@
 const puppeteer = require("puppeteer");
-const { newDBClient } = require("./db");
+const {
+  newDBClient,
+  addHeadline,
+  fetchArticleDetails,
+  addArticleDetails,
+  fetchLatestArticles,
+} = require("./db");
 const USER_AGENTS = require("./userAgents");
 const logger = require("./logger");
-const uuidv4 = require("uuid").v4;
+const { fetchArticle } = require("./nyt");
 
 const getRandomUserAgent = () => {
   const idx = Math.floor(Math.random() * USER_AGENTS.length);
   return USER_AGENTS[idx];
-};
-
-const saveToDB = async (client, headlineInfo) => {
-  const query =
-    "INSERT INTO headlines (snapshotid,id,sourceid,headline,summary,uri,lastmajormodification,lastmodified,tone,retrieved) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *";
-  const values = [
-    uuidv4(),
-    headlineInfo.id,
-    headlineInfo.sourceId,
-    headlineInfo.headline,
-    headlineInfo.summary,
-    headlineInfo.uri,
-    headlineInfo.lastMajorModification,
-    headlineInfo.lastModified,
-    headlineInfo.tone,
-    headlineInfo.retrievedAt,
-  ];
-
-  try {
-    await client.query(query, values);
-  } catch (err) {
-    logger.error(err.stack);
-  }
 };
 
 const loadNYTHeadlines = async () => {
@@ -69,15 +52,42 @@ const loadNYTHeadlines = async () => {
   });
 };
 
+const upsertArticle = async (dbClient, uri) => {
+  const existingArticle = await fetchArticleDetails(dbClient, uri);
+  if (!existingArticle) {
+    logger.info(`Fetching article metadata for ${uri}`);
+    const fetchedArticle = await fetchArticle(uri);
+    if (!fetchedArticle) {
+      throw new Error(`No article found for uri ${uri}`);
+    }
+    await addArticleDetails(dbClient, fetchedArticle);
+  }
+};
+
 const takeHeadlineSnapshot = async () => {
   logger.info("Script started");
   const dbClient = await newDBClient();
   const headlineInfo = await loadNYTHeadlines();
   for (const hi of headlineInfo) {
-    await saveToDB(dbClient, hi);
+    await addHeadline(dbClient, hi);
+    await upsertArticle(dbClient, hi.uri);
   }
   dbClient.end();
   logger.info(`Saved ${headlineInfo.length} headlines to DB`);
 };
 
-takeHeadlineSnapshot();
+const updateArticleData = async () => {
+  const dbClient = await newDBClient();
+  const articles = await fetchLatestArticles(dbClient);
+  for (let article of articles) {
+    try {
+      await upsertArticle(dbClient, article.uri);
+    } catch (err) {
+      logger.error(`Failed to upsert ${article.uri}`, err);
+    }
+  }
+  dbClient.end();
+};
+
+// takeHeadlineSnapshot();
+updateArticleData();

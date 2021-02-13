@@ -47,7 +47,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
--- Users
+-- Headlines
 
 CREATE TABLE headlines
 (
@@ -66,4 +66,25 @@ CREATE TABLE headlines
 
 DROP TRIGGER IF EXISTS update_headlines_transaction_columns ON headlines;
 CREATE TRIGGER update_headlines_transaction_columns BEFORE UPDATE ON headlines FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
+
+-- Articles
+
+CREATE TABLE articles
+(
+    uri TEXT PRIMARY KEY,
+    weburl TEXT,
+    abstract TEXT,
+    leadparagraph TEXT,
+    imageurl TEXT,
+    headline TEXT,
+    printheadline TEXT,
+    published TIMESTAMP WITH TIME ZONE,
+    byline TEXT,
+    wordcount INTEGER,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
+
+DROP TRIGGER IF EXISTS update_articles_transaction_columns ON articles;
+CREATE TRIGGER update_articles_transaction_columns BEFORE UPDATE ON articles FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
