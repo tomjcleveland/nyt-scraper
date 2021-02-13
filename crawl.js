@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+const { Client } = require("pg");
 const uuidv4 = require("uuid").v4;
 
 const USER_AGENTS = [
@@ -11,17 +12,7 @@ const getRandomUserAgent = () => {
   return USER_AGENTS[idx];
 };
 
-const saveToDB = async (headlineInfo) => {
-  const { Client } = require("pg");
-  const client = new Client({
-    user: "nyt_app",
-    host: "nyt-headlines.cbyvknksdshk.us-east-1.rds.amazonaws.com",
-    database: "nyt",
-    password: "ivzqi6WyLRkMk9tnrsrsj8qtsDJuZUnBXF9B",
-    port: 5432,
-  });
-  await client.connect();
-
+const saveToDB = async (client, headlineInfo) => {
   const query =
     "INSERT INTO headlines (snapshotid,id,sourceid,headline,summary,uri,lastmajormodification,lastmodified,tone,retrieved) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *";
   const values = [
@@ -42,8 +33,6 @@ const saveToDB = async (headlineInfo) => {
   } catch (err) {
     console.log(err.stack);
   }
-
-  await client.end();
 };
 
 const loadNYTHeadlines = async () => {
@@ -86,10 +75,19 @@ const loadNYTHeadlines = async () => {
 };
 
 const takeHeadlineSnapshot = async () => {
-  const headlineInfo = await loadNYTHeadlines();
-  headlineInfo.forEach(async (hi) => {
-    await saveToDB(hi);
+  const dbClient = new Client({
+    user: "nyt_app",
+    host: "nyt-headlines.cbyvknksdshk.us-east-1.rds.amazonaws.com",
+    database: "nyt",
+    password: "ivzqi6WyLRkMk9tnrsrsj8qtsDJuZUnBXF9B",
+    port: 5432,
   });
+  await dbClient.connect();
+  const headlineInfo = await loadNYTHeadlines();
+  for (const hi of headlineInfo) {
+    await saveToDB(dbClient, hi);
+  }
+  dbClient.end();
   console.log(`Saved ${headlineInfo.length} headlines to DB`);
 };
 
