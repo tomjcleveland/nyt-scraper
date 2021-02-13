@@ -1,0 +1,10 @@
+<% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
+<% const topHeadline = headlinesSorted[0]; %>
+<h3><%= topHeadline.headline %> (<%= topHeadline.pct %>%)</h3>
+<% if (headlinesSorted.length > 1) { %>
+  <ol>
+    <% headlinesSorted.slice(1).forEach((headline) => { %>
+      <li><%= headline.headline %> (<%= headline.pct %>%)</li>
+    <% }) %>
+  </ol>
+<% } %>

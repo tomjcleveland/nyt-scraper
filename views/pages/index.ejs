@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>NYT Headlines</title>
+    <meta name="description" content="See all A/B-tested NYT headlines" />
+
+    <style>
+      body {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol";
+      }
+
+      summary>h2 {
+        display: inline-block;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>NYT Headlines</h1>
+    <details open>
+      <summary><h2>A/B Tested</h2></summary>
+      <% articles.filter(a => a.headlines.length > 1).forEach((article) => { %>
+        <%- include('../partials/article', { article }) %>
+      <% }); %>
+    </details>
+    
+    <details>
+      <summary><h2>Regular</h2></summary>
+      <% articles.filter(a => a.headlines.length === 1).forEach((article) => { %>
+        <%- include('../partials/article', { article }) %>
+      <% }); %>
+    </details>
+  </body>
+</html>
