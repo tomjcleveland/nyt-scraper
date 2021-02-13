@@ -30,7 +30,6 @@ const uuidv4 = require("uuid").v4;
 
     try {
       const res = await client.query(query, values);
-      console.log(res.rows[0]);
     } catch (err) {
       console.log(err.stack);
     }
@@ -39,11 +38,15 @@ const uuidv4 = require("uuid").v4;
   };
 
   const browser = await puppeteer.launch();
+  console.log("Launched browser");
   const page = await browser.newPage();
+  console.log("Opened new page");
   await page.goto("https://www.nytimes.com/");
+  console.log("Navigated to NYT homepage");
   const initialState = await page.evaluate((_) => {
     return window.__preloadedData.initialState;
   });
+  console.log("Loaded initialState");
   const articleIds = Object.keys(initialState)
     .filter((key) => {
       if (key.startsWith("Article:")) {
@@ -71,5 +74,7 @@ const uuidv4 = require("uuid").v4;
   headlineInfo.forEach((hi) => {
     saveToDB(hi);
   });
+  console.log(`Saved ${headlineInfo.length} headlines to DB`);
   await browser.close();
+  console.log("Finished");
 })();
