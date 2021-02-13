@@ -64,11 +64,13 @@ exports.fetchLatestArticles = async (client) => {
       h.uri AS id,
       h.headline,
       a.weburl,
+      a.abstract,
+      a.imageurl,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.headlines AS h
       LEFT JOIN nyt.articles AS a ON h.uri=a.uri
-    GROUP BY 1, 2, 3
+    GROUP BY 1, 2, 3, 4, 5
     ORDER BY 4 DESC`;
   const res = await client.query(query);
   const articlesById = res.rows.reduce((acc, curr) => {
@@ -78,6 +80,8 @@ exports.fetchLatestArticles = async (client) => {
       count: parseInt(curr.count, 10),
       retrieved: curr.lastRetrieved,
       url: curr.weburl,
+      abstract: curr.abstract,
+      imageUrl: curr.imageurl,
     });
     return acc;
   }, {});

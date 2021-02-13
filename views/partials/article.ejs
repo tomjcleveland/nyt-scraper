@@ -1,10 +1,13 @@
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>
 <h3><a href="<%= topHeadline.url %>"><%= topHeadline.headline %></a> (<%= topHeadline.pct %>%)</h3>
+<p><%= topHeadline.abstract %></p>
 <% if (headlinesSorted.length > 1) { %>
+  <p><em>Alternate headlines:</em></p>
   <ol>
     <% headlinesSorted.slice(1).forEach((headline) => { %>
       <li><%= headline.headline %> (<%= headline.pct %>%)</li>
     <% }) %>
   </ol>
 <% } %>
+<br>
