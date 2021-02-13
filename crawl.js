@@ -1,6 +1,43 @@
 const puppeteer = require("puppeteer");
+const uuidv4 = require("uuid").v4;
 
 (async () => {
+  const saveToDB = async (headlineInfo) => {
+    const { Client } = require("pg");
+    const client = new Client({
+      user: "nyt_app",
+      host: "nyt-headlines.cbyvknksdshk.us-east-1.rds.amazonaws.com",
+      database: "nyt",
+      password: "ivzqi6WyLRkMk9tnrsrsj8qtsDJuZUnBXF9B",
+      port: 5432,
+    });
+    await client.connect();
+
+    const query =
+      "INSERT INTO headlines (snapshotid,id,sourceid,headline,summary,uri,lastmajormodification,lastmodified,tone,retrieved) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *";
+    const values = [
+      uuidv4(),
+      headlineInfo.id,
+      headlineInfo.sourceId,
+      headlineInfo.headline,
+      headlineInfo.summary,
+      headlineInfo.uri,
+      headlineInfo.lastMajorModification,
+      headlineInfo.lastModified,
+      headlineInfo.tone,
+      headlineInfo.retrievedAt,
+    ];
+
+    try {
+      const res = await client.query(query, values);
+      console.log(res.rows[0]);
+    } catch (err) {
+      console.log(err.stack);
+    }
+
+    await client.end();
+  };
+
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto("https://www.nytimes.com/");
@@ -16,7 +53,7 @@ const puppeteer = require("puppeteer");
     })
     .map((id) => id.split(".")[0])
     .filter((id, idx, arr) => arr.indexOf(id) === idx);
-  const retrievedAt = Date.now();
+  const retrievedAt = new Date();
   const headlineInfo = articleIds.map((id) => {
     const articleDetails = initialState[id];
     return {
@@ -25,12 +62,14 @@ const puppeteer = require("puppeteer");
       headline: articleDetails.promotionalHeadline,
       summary: articleDetails.promotionalSummary,
       uri: articleDetails.uri,
-      lastMajorModification: Date.parse(articleDetails.lastMajorModification),
-      lastModified: Date.parse(articleDetails.lastModified),
+      lastMajorModification: new Date(articleDetails.lastMajorModification),
+      lastModified: new Date(articleDetails.lastModified),
       tone: articleDetails.tone,
       retrievedAt,
     };
   });
-  console.log(headlineInfo);
+  headlineInfo.forEach((hi) => {
+    saveToDB(hi);
+  });
   await browser.close();
 })();
