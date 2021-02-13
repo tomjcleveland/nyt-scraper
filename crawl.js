@@ -2,9 +2,18 @@ const puppeteer = require("puppeteer");
 const { newDBClient } = require("./db");
 const USER_AGENTS = require("./userAgents");
 const uuidv4 = require("uuid").v4;
-const pino = require("pino");
+const { createLogger, format, transports } = require("winston");
+const { combine, timestamp, label, printf } = format;
 
-const logger = pino({ level: "info" });
+const logFormat = printf(({ level, message, timestamp }) => {
+  return `${timestamp} [${level}] ${message}`;
+});
+
+const logger = createLogger({
+  level: "info",
+  format: combine(timestamp(), logFormat),
+  transports: [new transports.Console()],
+});
 
 const getRandomUserAgent = () => {
   const idx = Math.floor(Math.random() * USER_AGENTS.length);

@@ -26,16 +26,18 @@
 
   <body>
     <h1>NYT Headlines</h1>
+    <% const abTestedArticles = articles.filter(a => a.headlines.length > 1); %>
+    <% const regularArticles = articles.filter(a => a.headlines.length === 1); %>
     <details open>
-      <summary><h2>A/B Tested</h2></summary>
-      <% articles.filter(a => a.headlines.length > 1).forEach((article) => { %>
+      <summary><h2>A/B Tested (<%= abTestedArticles.length %>)</h2></summary>
+      <% abTestedArticles.forEach((article) => { %>
         <%- include('../partials/article', { article }) %>
       <% }); %>
     </details>
     
     <details>
-      <summary><h2>Regular</h2></summary>
-      <% articles.filter(a => a.headlines.length === 1).forEach((article) => { %>
+      <summary><h2>Regular (<%= regularArticles.length %>)</h2></summary>
+      <% regularArticles.forEach((article) => { %>
         <%- include('../partials/article', { article }) %>
       <% }); %>
     </details>
