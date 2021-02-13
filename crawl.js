@@ -83,11 +83,11 @@ const updateArticleData = async () => {
     try {
       await upsertArticle(dbClient, article.uri);
     } catch (err) {
-      logger.error(`Failed to upsert ${article.uri}`, err);
+      logger.error(`Failed to upsert ${article.headlines[0].headline}`, err);
     }
   }
   dbClient.end();
 };
 
-// takeHeadlineSnapshot();
-updateArticleData();
+takeHeadlineSnapshot();
+// updateArticleData();
