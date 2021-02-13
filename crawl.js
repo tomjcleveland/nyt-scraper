@@ -75,6 +75,7 @@ const loadNYTHeadlines = async () => {
 };
 
 const takeHeadlineSnapshot = async () => {
+  console.log("Script started");
   const dbClient = new Client({
     user: "nyt_app",
     host: "nyt-headlines.cbyvknksdshk.us-east-1.rds.amazonaws.com",
@@ -83,6 +84,7 @@ const takeHeadlineSnapshot = async () => {
     port: 5432,
   });
   await dbClient.connect();
+  console.log("Connected to DB");
   const headlineInfo = await loadNYTHeadlines();
   for (const hi of headlineInfo) {
     await saveToDB(dbClient, hi);
