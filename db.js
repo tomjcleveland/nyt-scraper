@@ -62,7 +62,7 @@ const fetchArticleTimeSeries = async (client, uri) => {
   const query = `
     WITH minutecounts AS (
       SELECT
-        date_trunc('hour', retrieved) AS minute,
+        date_trunc('minute', retrieved) AS minute,
         headline,
         COUNT(*)
       FROM nyt.headlines
@@ -70,9 +70,9 @@ const fetchArticleTimeSeries = async (client, uri) => {
       GROUP BY 1, 2
       ORDER BY 1 DESC
     ),
-    totalperhour AS (
+    totalperminute AS (
       SELECT
-        date_trunc('hour', retrieved) AS minute,
+        date_trunc('minute', retrieved) AS minute,
         COUNT(*)
       FROM nyt.headlines
       WHERE uri=$1
@@ -83,9 +83,9 @@ const fetchArticleTimeSeries = async (client, uri) => {
       minutecounts.minute,
       headline,
       minutecounts.count AS count,
-      totalperhour.count AS total
+      totalperminute.count AS total
     FROM minutecounts
-    JOIN totalperhour ON totalperhour.minute=minutecounts.minute;
+    JOIN totalperminute ON totalperminute.minute=minutecounts.minute;
   `;
   const res = await client.query(query, [uri]);
   return res.rows;
