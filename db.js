@@ -66,11 +66,13 @@ exports.fetchLatestArticles = async (client) => {
       a.weburl,
       a.abstract,
       a.imageurl,
+      a.headline AS canonicalheadline,
+      a.printheadline,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.headlines AS h
       LEFT JOIN nyt.articles AS a ON h.uri=a.uri
-    GROUP BY 1, 2, 3, 4, 5
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
     ORDER BY 4 DESC`;
   const res = await client.query(query);
   const articlesById = res.rows.reduce((acc, curr) => {
@@ -82,6 +84,8 @@ exports.fetchLatestArticles = async (client) => {
       url: curr.weburl,
       abstract: curr.abstract,
       imageUrl: curr.imageurl,
+      canonicalHeadline: curr.canonicalheadline,
+      printHeadline: curr.printheadline,
     });
     return acc;
   }, {});
@@ -91,12 +95,18 @@ exports.fetchLatestArticles = async (client) => {
       const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
       return {
         ...currHeadline,
+        isCanonical: currHeadline.headline === currHeadline.canonicalHeadline,
         pct: Math.round((100 * currHeadline.count) / total),
       };
     });
     return {
       id,
       uri: id,
+      url: currHeadlines[0].url,
+      abstract: currHeadlines[0].abstract,
+      imageUrl: currHeadlines[0].imageUrl,
+      canonicalHeadline: currHeadlines[0].canonicalHeadline,
+      printHeadline: currHeadlines[0].printHeadline,
       headlines: withPct,
     };
   });

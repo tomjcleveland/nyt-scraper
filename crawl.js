@@ -6,13 +6,12 @@ const {
   addArticleDetails,
   fetchLatestArticles,
 } = require("./db");
-const USER_AGENTS = require("./userAgents");
+const UserAgent = require("user-agents");
 const logger = require("./logger");
 const { fetchArticle } = require("./nyt");
 
 const getRandomUserAgent = () => {
-  const idx = Math.floor(Math.random() * USER_AGENTS.length);
-  return USER_AGENTS[idx];
+  return new UserAgent().toString();
 };
 
 const loadNYTHeadlines = async () => {
