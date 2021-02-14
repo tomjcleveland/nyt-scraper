@@ -21,3 +21,40 @@ There has to be some way to follow the links in `intialData` to come up with all
 ### Idea
 
 For each article ID, search for an object where `object.id == id`. Check if this object has a key `headline`—if so, add that headline to the article. If not, go up one level and see if _that_ object has a key `headline`...etc.
+
+### Time series
+
+```sql
+WITH minutecounts AS (
+  SELECT
+    date_trunc('hour', retrieved) AS minute,
+    headline,
+    COUNT(*)
+  FROM nyt.headlines
+  WHERE uri='nyt://article/965c72e1-4f41-53a8-96dd-f1925388aea1'
+  GROUP BY 1, 2
+  ORDER BY 1 DESC
+),
+totalperhour AS (
+  SELECT
+    date_trunc('hour', retrieved) AS minute,
+    COUNT(*)
+  FROM nyt.headlines
+  WHERE uri='nyt://article/965c72e1-4f41-53a8-96dd-f1925388aea1'
+  GROUP BY 1
+  ORDER BY 1 DESC
+),
+runningtotal AS (
+  SELECT
+    minute,
+    SUM(count) OVER (ORDER BY minute) AS totalcount
+  FROM totalperhour
+)
+SELECT
+  minutecounts.minute,
+  headline,
+  SUM(count) OVER (PARTITION BY headline ORDER BY minutecounts.minute),
+  runningtotal.totalcount
+FROM minutecounts
+JOIN runningtotal ON runningtotal.minute=minutecounts.minute;
+```

@@ -3,22 +3,62 @@
 <small><code><%= article.uri %></code></small>
 <h3 style="margin-top: 8px;">
   <a href="<%= topHeadline.url %>">
-    <%= topHeadline.headline %></a>
-    <% if (topHeadline.isCanonical) { %>
-      [canonical]
-    <% } %>
-     (<%= topHeadline.pct %>%)
-  </h3>
+    <%= topHeadline.headline %>
+  </a>
+  <% if (topHeadline.isCanonical) { %>
+    <small><code>[canonical]</code></small>
+  <% } %>
+  (<%= topHeadline.pct %>%)
+</h3>
 <p><%= topHeadline.abstract %></p>
-<p><em>Alternate headlines:</em></p>
-<ol>
-  <% headlinesSorted.slice(1).forEach((headline) => { %>
-    <li>
-      <% if (headline.isCanonical) { %>
-        <span>[canonical]</span>
-      <% } %>
-      <%= headline.headline %> (<%= headline.pct %>%)
-    </li>
-  <% }) %>
-</ol>
+<% if (headlinesSorted.length > 1) { %>
+  <p><em>Alternate headlines:</em></p>
+  <ol>
+    <% headlinesSorted.slice(1).forEach((headline) => { %>
+      <li>
+        <% if (headline.isCanonical) { %>
+          <small><code>[canonical]</code></small>
+        <% } %>
+        <%= headline.headline %> (<%= headline.pct %>%)
+      </li>
+    <% }) %>
+  </ol>
+<% } %>
+<% if (article.timeSeries) { %>
+  <canvas id="myChart" width="800" height="400"></canvas>
+  <script>
+    const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
+    const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const datasets = headlines.map((headline) => {
+        return {
+          label: headline,
+          data: timeSeries
+            .filter((t) => t.headline === headline)
+            .map(t => {
+              return {
+                  x: new Date(t.minute),
+                  y: Math.round(100 * (t.sum / t.totalcount)),
+                }
+            })
+        }
+      });
+    const myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets,
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'time',
+              time: {
+                unit: 'hour'
+              }
+          }]
+        }
+      }
+    });
+  </script>
+<% } %>
 <br>

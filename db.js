@@ -58,8 +58,50 @@ exports.addArticleDetails = async (client, article) => {
   ]);
 };
 
+const fetchArticleTimeSeries = async (client, uri) => {
+  const query = `
+    WITH minutecounts AS (
+      SELECT
+        date_trunc('hour', retrieved) AS minute,
+        headline,
+        COUNT(*)
+      FROM nyt.headlines
+      WHERE uri=$1
+      GROUP BY 1, 2
+      ORDER BY 1 DESC
+    ),
+    totalperhour AS (
+      SELECT
+        date_trunc('hour', retrieved) AS minute,
+        COUNT(*)
+      FROM nyt.headlines
+      WHERE uri=$1
+      GROUP BY 1
+      ORDER BY 1 DESC
+    ),
+    runningtotal AS (
+      SELECT
+        minute,
+        SUM(count) OVER (ORDER BY minute) AS totalcount
+      FROM totalperhour
+    )
+    SELECT
+      minutecounts.minute,
+      headline,
+      SUM(count) OVER (PARTITION BY headline ORDER BY minutecounts.minute),
+      runningtotal.totalcount
+    FROM minutecounts
+    JOIN runningtotal ON runningtotal.minute=minutecounts.minute;
+  `;
+  const res = await client.query(query, [uri]);
+  return res.rows;
+};
+
 exports.fetchLatestArticles = async (client) => {
   const query = `
+    WITH current AS (
+      SELECT DISTINCT uri FROM nyt.headlines WHERE retrieved > (now() - interval '30 minutes')
+    )
     SELECT
       h.uri AS id,
       h.headline,
@@ -72,6 +114,7 @@ exports.fetchLatestArticles = async (client) => {
       MAX(retrieved) AS lastRetrieved
     FROM nyt.headlines AS h
       LEFT JOIN nyt.articles AS a ON h.uri=a.uri
+      INNER JOIN current ON current.uri=a.uri
     GROUP BY 1, 2, 3, 4, 5, 6, 7
     ORDER BY 4 DESC`;
   const res = await client.query(query);
@@ -89,7 +132,7 @@ exports.fetchLatestArticles = async (client) => {
     });
     return acc;
   }, {});
-  return Object.keys(articlesById).map((id) => {
+  const results = Object.keys(articlesById).map(async (id) => {
     const currHeadlines = articlesById[id];
     const withPct = currHeadlines.map((currHeadline) => {
       const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
@@ -99,10 +142,18 @@ exports.fetchLatestArticles = async (client) => {
         pct: Math.round((100 * currHeadline.count) / total),
       };
     });
+
+    // Get time series for article with multiple headlines
+    let timeSeries = null;
+    if (currHeadlines.length > 1) {
+      timeSeries = await fetchArticleTimeSeries(client, id);
+    }
+
     return {
       id,
       uri: id,
       url: currHeadlines[0].url,
+      timeSeries,
       abstract: currHeadlines[0].abstract,
       imageUrl: currHeadlines[0].imageUrl,
       canonicalHeadline: currHeadlines[0].canonicalHeadline,
@@ -110,4 +161,6 @@ exports.fetchLatestArticles = async (client) => {
       headlines: withPct,
     };
   });
+
+  return Promise.all(results);
 };
