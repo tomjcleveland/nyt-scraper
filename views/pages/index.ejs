@@ -10,6 +10,7 @@
 
     <style>
       body {
+        color: #4B5563;
         max-width: 780px;
         margin: 0 auto;
         padding: 16px;
@@ -18,9 +19,27 @@
           "Segoe UI Symbol";
       }
 
+      h1,h2,h3,h4,h5,h6 {
+        color: #111827;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      footer {
+        text-align: center;
+        padding: 24px 0;
+      }
+
       summary>h2 {
         display: inline-block;
         cursor: pointer;
+      }
+
+      .headline-details {
+        padding-left: 20px;
+        border-left: 5px solid rgba(0, 0, 0, 0.1);
       }
     </style>
   </head>
@@ -31,6 +50,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
 
     <h1>NYT Headlines</h1>
+    <p>See all A/B tested headlines on <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
     <% const abTestedArticles = articles.filter(a => a.headlines.length > 1); %>
     <% const regularArticles = articles.filter(a => a.headlines.length === 1); %>
     <details open>
@@ -41,10 +61,13 @@
     </details>
     
     <details>
-      <summary><h2>Regular (<%= regularArticles.length %>)</h2></summary>
+      <summary><h2>Single headlines (<%= regularArticles.length %>)</h2></summary>
       <% regularArticles.forEach((article) => { %>
         <%- include('../partials/article', { article }) %>
       <% }); %>
     </details>
+    <footer>
+      A project by <strong><a href="https://tjcx.me">TJCX</a></strong>.
+    </footer>
   </body>
 </html>

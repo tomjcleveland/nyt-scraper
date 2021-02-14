@@ -78,20 +78,14 @@ const fetchArticleTimeSeries = async (client, uri) => {
       WHERE uri=$1
       GROUP BY 1
       ORDER BY 1 DESC
-    ),
-    runningtotal AS (
-      SELECT
-        minute,
-        SUM(count) OVER (ORDER BY minute) AS totalcount
-      FROM totalperhour
     )
     SELECT
       minutecounts.minute,
       headline,
-      SUM(count) OVER (PARTITION BY headline ORDER BY minutecounts.minute),
-      runningtotal.totalcount
+      minutecounts.count AS count,
+      totalperhour.count AS total
     FROM minutecounts
-    JOIN runningtotal ON runningtotal.minute=minutecounts.minute;
+    JOIN totalperhour ON totalperhour.minute=minutecounts.minute;
   `;
   const res = await client.query(query, [uri]);
   return res.rows;

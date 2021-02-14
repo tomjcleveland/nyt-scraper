@@ -1,64 +1,79 @@
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>
-<small><code><%= article.uri %></code></small>
-<h3 style="margin-top: 8px;">
+<h3>
   <a href="<%= topHeadline.url %>">
     <%= topHeadline.headline %>
   </a>
-  <% if (topHeadline.isCanonical) { %>
-    <small><code>[canonical]</code></small>
-  <% } %>
-  (<%= topHeadline.pct %>%)
 </h3>
-<p><%= topHeadline.abstract %></p>
-<% if (headlinesSorted.length > 1) { %>
-  <p><em>Alternate headlines:</em></p>
-  <ol>
-    <% headlinesSorted.slice(1).forEach((headline) => { %>
-      <li>
-        <% if (headline.isCanonical) { %>
-          <small><code>[canonical]</code></small>
-        <% } %>
-        <%= headline.headline %> (<%= headline.pct %>%)
-      </li>
-    <% }) %>
-  </ol>
-<% } %>
-<% if (article.timeSeries) { %>
-  <canvas id="myChart" width="800" height="400"></canvas>
-  <script>
-    const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
-    const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const datasets = headlines.map((headline) => {
-        return {
-          label: headline,
-          data: timeSeries
-            .filter((t) => t.headline === headline)
-            .map(t => {
-              return {
-                  x: new Date(t.minute),
-                  y: Math.round(100 * (t.sum / t.totalcount)),
+<div class="headline-details">
+  <p><%= topHeadline.abstract %></p>
+  <% if (headlinesSorted.length > 1) { %>
+    <p><em>Alternate headlines (incidence)</em></p>
+    <ol>
+      <% headlinesSorted.forEach((headline) => { %>
+        <li>
+          <strong><%= headline.headline %></strong> (<%= headline.pct %>%)
+        </li>
+      <% }) %>
+    </ol>
+  <% } %>
+  <% if (article.timeSeries) { %>
+    <h4 style="margin-bottom: 8px;">Incidence over time</h4>
+    <% const chartId = `chart-${encodeURIComponent(article.canonicalHeadline)}`; %>
+    <canvas id="<%= chartId %>" width="800" height="400"></canvas>
+    <script>
+      (() => {
+        const COLORS = [
+          'rgba(239, 68, 68, 0.2)', // Red 500
+          'rgba(59, 130, 246, 0.2)', // Blue 500
+          'rgba(245, 158, 11, 0.2)', // Yellow 500
+          'rgba(139, 92, 246, 0.2)', // Purple 500
+          'rgba(16, 185, 129, 0.2)', // Green 500
+          'rgba(236, 72, 153, 0.2)', // Pink 500
+        ];
+        const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
+        const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
+        const ctx = document.getElementById('<%= chartId %>').getContext('2d');
+        const datasets = headlines.map((headline, i) => {
+            return {
+              label: headline,
+              backgroundColor: COLORS[i % COLORS.length],
+              data: timeSeries
+                .filter((t) => t.headline === headline)
+                .map(t => {
+                  return {
+                      x: new Date(t.minute),
+                      y: Math.round(100 * (t.count / t.total)),
+                    }
+                })
+            }
+          });
+        const myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets,
+          },
+          options: {
+            scales: {
+              xAxes: [{
+                type: 'time',
+                  time: {
+                    unit: 'hour'
+                  }
+              }],
+              yAxes: [{
+                ticks: {
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    callback: (v) => `${v}%`,
                 }
-            })
-        }
-      });
-    const myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        datasets,
-      },
-      options: {
-        scales: {
-          xAxes: [{
-            type: 'time',
-              time: {
-                unit: 'hour'
-              }
-          }]
-        }
-      }
-    });
-  </script>
-<% } %>
+            }]
+            }
+          }
+        });
+      })();
+    </script>
+  <% } %>
+  <small><code><%= article.uri %></code></small>
+</div>
 <br>
