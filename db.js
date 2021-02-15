@@ -44,8 +44,18 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
   return res.rows[0] || null;
 };
 
+exports.fetchArticleById = async (client, id) => {
+  const query = `
+  SELECT * FROM nyt.articles WHERE uri=$1`;
+  const res = await client.query(query, [id]);
+  return res.rows[0] || null;
+};
+
 exports.addArticleDetails = async (client, article) => {
-  const query = `INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`;
+  const query = `
+    INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    ON CONFLICT ON CONSTRAINT articles_pkey
+    DO UPDATE SET weburl=EXCLUDED.weburl`;
   const imageUrl =
     article.multimedia.length > 0
       ? `https://www.nytimes.com/${article.multimedia[0].url}`
@@ -94,6 +104,23 @@ const fetchArticleTimeSeries = async (client, uri) => {
     JOIN totalperminute ON totalperminute.minute=minutecounts.minute;
   `;
   const res = await client.query(query, [uri]);
+  return res.rows;
+};
+
+exports.queryHeadlines = async (client, searchQuery) => {
+  const tsQuery = searchQuery
+    .split(" ")
+    .map((w) => `${w}:*`)
+    .join(" & ");
+  console.log(tsQuery);
+  const query = `
+    SELECT h.headline, h.uri
+    FROM nyt.articles AS a
+      JOIN nyt.headlines AS h ON a.uri=h.uri
+    WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
+    LIMIT 10;
+  `;
+  const res = await client.query(query, [tsQuery]);
   return res.rows;
 };
 

@@ -1,5 +1,11 @@
 const express = require("express");
-const { newDBClient, fetchLatestArticles } = require("./db");
+const {
+  newDBClient,
+  fetchLatestArticles,
+  queryHeadlines,
+  fetchArticleById,
+} = require("./db");
+const { fetchArticleByUrl } = require("./nyt");
 const app = express();
 app.set("view engine", "ejs");
 const port = 3000;
@@ -29,6 +35,19 @@ const COLORS = {
   app.get("/", async (req, res) => {
     const articles = await fetchLatestArticles(dbClient);
     res.render("pages/index", { articles: articles, COLORS });
+  });
+
+  app.get("/search", async (req, res) => {
+    const results = await queryHeadlines(dbClient, req.query.q);
+    res.json(results);
+  });
+
+  app.get("/articles/:id", async (req, res) => {
+    const article = await fetchArticleById(
+      dbClient,
+      `nyt://article/${req.params.id}`
+    );
+    res.render("pages/article", { article });
   });
 
   app.get("/health", async (req, res) => {

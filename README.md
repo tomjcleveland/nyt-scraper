@@ -52,3 +52,12 @@ WITH minutecounts AS (
   FROM minutecounts
   JOIN totalperminute ON totalperminute.minute=minutecounts.minute;
 ```
+
+### Full text search
+
+```sql
+SELECT DISTINCT h.headline
+FROM nyt.articles AS a
+  JOIN nyt.headlines AS h ON a.uri=h.uri
+WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', 'trump');
+```

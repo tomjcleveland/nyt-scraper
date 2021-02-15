@@ -126,7 +126,11 @@ const upsertArticleByUrl = async (dbClient, url) => {
     logger.info(`Fetching article metadata for ${url}`);
     article = await fetchArticleByUrl(url);
     if (article) {
-      await addArticleDetails(dbClient, article);
+      try {
+        await addArticleDetails(dbClient, article);
+      } catch (err) {
+        logger.error(err);
+      }
     }
   }
   return article;
