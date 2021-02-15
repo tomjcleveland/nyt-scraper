@@ -8,6 +8,8 @@
     <title>NYT Headlines</title>
     <meta name="description" content="See all A/B-tested NYT headlines" />
 
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22256%22 height=%22256%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231f2937%22></rect><path fill=%22%23fff%22 d=%22%22></path></svg>" />
+
     <style>
       body {
         color: #4B5563;
@@ -50,7 +52,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
 
     <h1>NYT Headlines</h1>
-    <p>See all A/B tested headlines on <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
+    <p>A/B tested headlines from the <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
     <% const abTestedArticles = articles.filter(a => a.headlines.length > 1); %>
     <% const regularArticles = articles.filter(a => a.headlines.length === 1); %>
     <details open>

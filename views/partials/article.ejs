@@ -24,12 +24,12 @@
     <script>
       (() => {
         const COLORS = [
-          'rgba(239, 68, 68, 0.2)', // Red 500
           'rgba(59, 130, 246, 0.2)', // Blue 500
-          'rgba(245, 158, 11, 0.2)', // Yellow 500
-          'rgba(139, 92, 246, 0.2)', // Purple 500
           'rgba(16, 185, 129, 0.2)', // Green 500
+          'rgba(139, 92, 246, 0.2)', // Purple 500
+          'rgba(245, 158, 11, 0.2)', // Yellow 500
           'rgba(236, 72, 153, 0.2)', // Pink 500
+          'rgba(239, 68, 68, 0.2)', // Red 500
         ];
         const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
         const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
@@ -57,9 +57,9 @@
             scales: {
               xAxes: [{
                 type: 'time',
-                  time: {
-                    unit: 'hour'
-                  }
+                time: {
+                  unit: 'hour'
+                },
               }],
               yAxes: [{
                 ticks: {
@@ -67,7 +67,7 @@
                     suggestedMax: 100,
                     callback: (v) => `${v}%`,
                 }
-            }]
+              }]
             }
           }
         });
