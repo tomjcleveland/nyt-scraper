@@ -34,7 +34,7 @@ const COLORS = {
 
   app.get("/", async (req, res) => {
     const articles = await fetchLatestArticles(dbClient);
-    res.render("pages/index", { articles: articles, COLORS });
+    res.render("pages/index", { articles, COLORS });
   });
 
   app.get("/search", async (req, res) => {
@@ -47,7 +47,7 @@ const COLORS = {
       dbClient,
       `nyt://article/${req.params.id}`
     );
-    res.render("pages/article", { article });
+    res.render("pages/article", { article, COLORS });
   });
 
   app.get("/health", async (req, res) => {
