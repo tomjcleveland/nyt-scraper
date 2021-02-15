@@ -68,7 +68,7 @@ const fetchArticleTimeSeries = async (client, uri) => {
   const query = `
     WITH minutecounts AS (
       SELECT
-        date_trunc('minute', retrieved) AS minute,
+        date_trunc('hour', retrieved) AS minute,
         headline,
         COUNT(*)
       FROM nyt.headlines
@@ -78,7 +78,7 @@ const fetchArticleTimeSeries = async (client, uri) => {
     ),
     totalperminute AS (
       SELECT
-        date_trunc('minute', retrieved) AS minute,
+        date_trunc('hour', retrieved) AS minute,
         COUNT(*)
       FROM nyt.headlines
       WHERE uri=$1
