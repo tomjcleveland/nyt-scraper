@@ -13,7 +13,7 @@
     <style>
       body {
         color: #4B5563;
-        max-width: 780px;
+        max-width: 680px;
         margin: 0 auto;
         padding: 16px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -34,7 +34,7 @@
         padding: 24px 0;
       }
 
-      summary>h2 {
+      summary>h2, summary,h4 {
         display: inline-block;
         cursor: pointer;
       }
@@ -49,10 +49,13 @@
   <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+    <script>
+      window.COLORS = JSON.parse('<%- JSON.stringify(COLORS) %>');
+    </script>
 
     <h1>NYT Headlines</h1>
-    <p>A/B tested headlines from the <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
+    <p>A/B tested headlines currently on the <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
     <% const abTestedArticles = articles.filter(a => a.headlines.length > 1); %>
     <% const regularArticles = articles.filter(a => a.headlines.length === 1); %>
     <details open>
@@ -69,7 +72,7 @@
       <% }); %>
     </details>
     <footer>
-      A project by <strong><a href="https://tjcx.me">TJCX</a></strong>.
+      A project by <strong><a href="https://tjcx.me">TJCX</a></strong> &bull; <a href="mailto:tom@tjcx.me">tom@tjcx.me</a>
     </footer>
   </body>
 </html>

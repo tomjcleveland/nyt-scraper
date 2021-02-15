@@ -5,39 +5,32 @@
     <%= topHeadline.headline %>
   </a>
 </h3>
+<p><%= topHeadline.abstract %></p>
 <div class="headline-details">
-  <p><%= topHeadline.abstract %></p>
+  <p><em>Print headline: <%= article.printHeadline || article.canonicalHeadline %></em></p>
   <% if (headlinesSorted.length > 1) { %>
-    <p><em>A/B tested headlines (incidence)</em></p>
+    <h4 style="margin: 0;">A/B tested headlines (incidence)</h4>
     <ol>
-      <% headlinesSorted.forEach((headline) => { %>
+      <% headlinesSorted.forEach((headline, i) => { %>
         <li>
-          <strong><%= headline.headline %></strong> (<%= headline.pct %>%)
+          <strong style="color: <%- COLORS.FULL[i % COLORS.FULL.length] %>;"><%= headline.headline %></strong> (<%= headline.pct %>%)
         </li>
       <% }) %>
     </ol>
   <% } %>
   <% if (article.timeSeries) { %>
-    <h4 style="margin-bottom: 8px;">Incidence over time</h4>
+    <h4 style="margin-top: 8px;">Incidence over time</h4>
     <% const chartId = `chart-${encodeURIComponent(article.canonicalHeadline)}`; %>
     <canvas id="<%= chartId %>" width="800" height="400"></canvas>
     <script>
       (() => {
-        const COLORS = [
-          'rgba(59, 130, 246, 0.2)', // Blue 500
-          'rgba(16, 185, 129, 0.2)', // Green 500
-          'rgba(139, 92, 246, 0.2)', // Purple 500
-          'rgba(245, 158, 11, 0.2)', // Yellow 500
-          'rgba(236, 72, 153, 0.2)', // Pink 500
-          'rgba(239, 68, 68, 0.2)', // Red 500
-        ];
         const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
         const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
         const ctx = document.getElementById('<%= chartId %>').getContext('2d');
         const datasets = headlines.map((headline, i) => {
             return {
               label: headline,
-              backgroundColor: COLORS[i % COLORS.length],
+              backgroundColor: window.COLORS.LIGHT[i % window.COLORS.LIGHT.length],
               data: timeSeries
                 .filter((t) => t.headline === headline)
                 .map(t => {
@@ -54,6 +47,11 @@
             datasets,
           },
           options: {
+            legend: {
+              position: 'bottom',
+              align: 'start',
+              display: false
+            },
             scales: {
               xAxes: [{
                 type: 'time',

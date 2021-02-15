@@ -27,28 +27,28 @@ For each article ID, search for an object where `object.id == id`. Check if this
 ```sql
 WITH minutecounts AS (
   SELECT
-    date_trunc('hour', retrieved) AS minute,
+    date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 5 * interval '5 min' AS minute,
     headline,
     COUNT(*)
   FROM nyt.headlines
-  WHERE uri='nyt://article/965c72e1-4f41-53a8-96dd-f1925388aea1'
+  WHERE uri='nyt://article/127c5461-8ea6-59e0-b6d2-55992d182431'
   GROUP BY 1, 2
   ORDER BY 1 DESC
-),
-totalperhour AS (
+  ),
+  totalperminute AS (
   SELECT
-    date_trunc('hour', retrieved) AS minute,
+  date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 5 * interval '5 min' AS minute,
     COUNT(*)
   FROM nyt.headlines
-  WHERE uri='nyt://article/965c72e1-4f41-53a8-96dd-f1925388aea1'
+  WHERE uri='nyt://article/127c5461-8ea6-59e0-b6d2-55992d182431'
   GROUP BY 1
   ORDER BY 1 DESC
-)
-SELECT
+  )
+  SELECT
   minutecounts.minute,
   headline,
   minutecounts.count AS count,
-  totalperhour.count AS total
-FROM minutecounts
-JOIN totalperhour ON totalperhour.minute=minutecounts.minute;
+  totalperminute.count AS total
+  FROM minutecounts
+  JOIN totalperminute ON totalperminute.minute=minutecounts.minute;
 ```
