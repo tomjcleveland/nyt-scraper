@@ -3,24 +3,81 @@ const {
   newDBClient,
   addHeadline,
   fetchArticleDetails,
+  fetchArticleDetailsByUrl,
   addArticleDetails,
   fetchLatestArticles,
 } = require("./db");
 const UserAgent = require("user-agents");
 const logger = require("./logger");
-const { fetchArticle } = require("./nyt");
+const { fetchArticleByUri, fetchArticleByUrl } = require("./nyt");
 
 const getRandomUserAgent = () => {
   return new UserAgent().toString();
 };
 
-const loadNYTHeadlines = async () => {
-  const browser = await puppeteer.launch();
+const loadNYTHomepage = async (browser) => {
   const page = await browser.newPage();
   const userAgent = getRandomUserAgent();
   page.setUserAgent(userAgent);
   logger.info(`Opened new page with User-Agent: ${userAgent}`);
   await page.goto("https://www.nytimes.com/");
+  return page;
+};
+
+const removeDoubleHeadline = (headline) => {
+  if (headline.length % 2 === 1) {
+    return headline;
+  }
+  const firstHalf = headline.slice(0, headline.length / 2);
+  const secondHalf = headline.slice(headline.length / 2);
+  if (firstHalf === secondHalf) {
+    return firstHalf;
+  }
+  return headline;
+};
+
+const loadNYTHeadlinesDOM = async (dbClient) => {
+  const browser = await puppeteer.launch();
+  const page = await loadNYTHomepage(browser);
+  const headings = await page.$$("h2, h3");
+  const results = [];
+  const retrievedAt = new Date();
+  for (let heading of headings) {
+    let headline = await heading.evaluate((e) => e.textContent);
+    headline = removeDoubleHeadline(headline);
+    const [anchor] = await heading.$x("ancestor::a");
+    if (anchor) {
+      const href = await anchor.evaluate((e) => e.getAttribute("href"));
+      const uri = await anchor.evaluate((e) => e.getAttribute("data-uri"));
+      let hrefClean = href.split("?")[0];
+      if (hrefClean?.startsWith("/")) {
+        hrefClean = "https://www.nytimes.com" + hrefClean;
+      }
+      if (
+        !hrefClean.startsWith(
+          `https://www.nytimes.com/${new Date().getUTCFullYear()}/`
+        )
+      ) {
+        continue;
+      }
+      const article = await upsertArticleByUrl(dbClient, hrefClean);
+      if (article) {
+        results.push({
+          id: article.uri,
+          uri: article.uri,
+          headline,
+          retrievedAt,
+        });
+      }
+    }
+  }
+  browser.close();
+  return results;
+};
+
+const loadNYTHeadlines = async () => {
+  const browser = await puppeteer.launch();
+  const page = await loadNYTHomepage(browser);
   const initialState = await page.evaluate((_) => {
     return window.__preloadedData.initialState;
   });
@@ -51,11 +108,11 @@ const loadNYTHeadlines = async () => {
   });
 };
 
-const upsertArticle = async (dbClient, uri) => {
+const upsertArticleByUri = async (dbClient, uri) => {
   const existingArticle = await fetchArticleDetails(dbClient, uri);
   if (!existingArticle) {
     logger.info(`Fetching article metadata for ${uri}`);
-    const fetchedArticle = await fetchArticle(uri);
+    const fetchedArticle = await fetchArticleByUri(uri);
     if (!fetchedArticle) {
       throw new Error(`No article found for uri ${uri}`);
     }
@@ -63,13 +120,25 @@ const upsertArticle = async (dbClient, uri) => {
   }
 };
 
+const upsertArticleByUrl = async (dbClient, url) => {
+  let article = await fetchArticleDetailsByUrl(dbClient, url);
+  if (!article) {
+    logger.info(`Fetching article metadata for ${url}`);
+    article = await fetchArticleByUrl(url);
+    if (article) {
+      await addArticleDetails(dbClient, article);
+    }
+  }
+  return article;
+};
+
 const takeHeadlineSnapshot = async () => {
   logger.info("Script started");
   const dbClient = await newDBClient();
-  const headlineInfo = await loadNYTHeadlines();
+  const headlineInfo = await loadNYTHeadlinesDOM(dbClient);
   for (const hi of headlineInfo) {
     await addHeadline(dbClient, hi);
-    await upsertArticle(dbClient, hi.uri);
+    // await upsertArticleByUri(dbClient, hi.uri);
   }
   dbClient.end();
   logger.info(`Saved ${headlineInfo.length} headlines to DB`);
@@ -80,7 +149,7 @@ const updateArticleData = async () => {
   const articles = await fetchLatestArticles(dbClient);
   for (let article of articles) {
     try {
-      await upsertArticle(dbClient, article.uri);
+      await upsertArticleByUri(dbClient, article.uri);
     } catch (err) {
       logger.error(`Failed to upsert ${article.headlines[0].headline}`, err);
     }
@@ -90,3 +159,11 @@ const updateArticleData = async () => {
 
 takeHeadlineSnapshot();
 // updateArticleData();
+
+// (async () => {
+//   const dbClient = await newDBClient();
+//   const results = await loadNYTHeadlinesDOM(dbClient);
+//   dbClient.end();
+//   console.log(JSON.stringify(results, null, 3));
+//   console.log(`${results.length} total results`);
+// })();

@@ -38,6 +38,12 @@ exports.fetchArticleDetails = async (client, uri) => {
   return res.rows[0] || null;
 };
 
+exports.fetchArticleDetailsByUrl = async (client, url) => {
+  const query = `SELECT * FROM nyt.articles WHERE weburl=$1`;
+  const res = await client.query(query, [url]);
+  return res.rows[0] || null;
+};
+
 exports.addArticleDetails = async (client, article) => {
   const query = `INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`;
   const imageUrl =

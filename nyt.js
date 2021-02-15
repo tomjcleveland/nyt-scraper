@@ -9,11 +9,11 @@ const MAX_RETRIES = 5;
 
 const RATE_LIMIT_WAIT = 30000;
 
-const fetchArticleHelper = async (uri, numRetries) => {
+const fetchArticleHelper = async (field, value, numRetries) => {
   if (numRetries > MAX_RETRIES) {
     throw new Error(`Hit rate limit ${MAX_RETRIES} times in a row`);
   }
-  const filterQuery = `uri:("${uri}")`;
+  const filterQuery = `${field}:("${value}")`;
   const resp = await fetch(
     `${SEARCH_URL}?fq=${encodeURIComponent(filterQuery)}&api-key=${API_KEY}`
   );
@@ -22,7 +22,7 @@ const fetchArticleHelper = async (uri, numRetries) => {
     await new Promise((resolve) => {
       setTimeout(resolve, RATE_LIMIT_WAIT);
     });
-    return fetchArticleHelper(uri, numRetries + 1);
+    return fetchArticleHelper(field, value, numRetries + 1);
   }
   if (resp.status != 200) {
     const body = await resp.text();
@@ -32,6 +32,10 @@ const fetchArticleHelper = async (uri, numRetries) => {
   return doc.response.docs[0];
 };
 
-exports.fetchArticle = async (uri) => {
-  return fetchArticleHelper(uri, 0);
+exports.fetchArticleByUri = async (uri) => {
+  return fetchArticleHelper("uri", uri, 0);
+};
+
+exports.fetchArticleByUrl = async (url) => {
+  return fetchArticleHelper("web_url", url, 0);
 };
