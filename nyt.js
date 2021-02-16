@@ -2,6 +2,11 @@ const fetch = require("node-fetch");
 const { queryHeadlines } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
+const {
+  fetchArticleDetails,
+  fetchArticleDetailsByUrl,
+  addArticleDetails,
+} = require("./db");
 
 const API_KEY = "2ACuPVaGRIMncruKTSHxtfBqmKZzDP0M";
 
@@ -41,11 +46,13 @@ const apiHelper = async (url, params, numRetries) => {
   return await resp.json();
 };
 
-exports.fetchArticleByUri = async (uri) => {
+const fetchArticleByUri = async (uri) => {
   const filterQuery = `uri:("${uri}")`;
   const respJSON = await apiHelper(SEARCH_URL, { fq: filterQuery });
   return respJSON.response.docs[0];
 };
+
+exports.fetchArticleByUri = fetchArticleByUri;
 
 const POPTYPE_TO_URL = {
   [POPTYPE.EMAILED]: EMAILS_URL,
@@ -60,4 +67,32 @@ exports.fetchPopularArticles = async (type) => {
 
 exports.fetchArticleByUrl = async (url) => {
   return fetchArticleHelper("web_url", url, 0);
+};
+
+exports.upsertArticleByUri = async (dbClient, uri) => {
+  const existingArticle = await fetchArticleDetails(dbClient, uri);
+  if (!existingArticle) {
+    logger.info(`Fetching article metadata for ${uri}`);
+    const fetchedArticle = await fetchArticleByUri(uri);
+    if (!fetchedArticle) {
+      throw new Error(`No article found for uri ${uri}`);
+    }
+    await addArticleDetails(dbClient, fetchedArticle);
+  }
+};
+
+exports.upsertArticleByUrl = async (dbClient, url) => {
+  let article = await fetchArticleDetailsByUrl(dbClient, url);
+  if (!article) {
+    logger.info(`Fetching article metadata for ${url}`);
+    article = await fetchArticleByUrl(url);
+    if (article) {
+      try {
+        await addArticleDetails(dbClient, article);
+      } catch (err) {
+        logger.error(err);
+      }
+    }
+  }
+  return article;
 };

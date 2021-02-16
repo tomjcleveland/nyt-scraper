@@ -11,7 +11,12 @@ const Sentry = require("@sentry/node");
 const UserAgent = require("user-agents");
 const logger = require("./logger");
 const sentryInit = require("./sentry");
-const { fetchArticleByUri, fetchArticleByUrl } = require("./nyt");
+const {
+  fetchArticleByUri,
+  fetchArticleByUrl,
+  upsertArticleByUri,
+  upsertArticleByUrl,
+} = require("./nyt");
 
 sentryInit();
 
@@ -108,34 +113,6 @@ const loadNYTHeadlines = async () => {
       retrievedAt,
     };
   });
-};
-
-const upsertArticleByUri = async (dbClient, uri) => {
-  const existingArticle = await fetchArticleDetails(dbClient, uri);
-  if (!existingArticle) {
-    logger.info(`Fetching article metadata for ${uri}`);
-    const fetchedArticle = await fetchArticleByUri(uri);
-    if (!fetchedArticle) {
-      throw new Error(`No article found for uri ${uri}`);
-    }
-    await addArticleDetails(dbClient, fetchedArticle);
-  }
-};
-
-const upsertArticleByUrl = async (dbClient, url) => {
-  let article = await fetchArticleDetailsByUrl(dbClient, url);
-  if (!article) {
-    logger.info(`Fetching article metadata for ${url}`);
-    article = await fetchArticleByUrl(url);
-    if (article) {
-      try {
-        await addArticleDetails(dbClient, article);
-      } catch (err) {
-        logger.error(err);
-      }
-    }
-  }
-  return article;
 };
 
 const takeHeadlineSnapshot = async () => {
