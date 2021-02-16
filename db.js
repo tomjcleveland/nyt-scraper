@@ -112,7 +112,6 @@ exports.queryHeadlines = async (client, searchQuery) => {
     .split(" ")
     .map((w) => `${w}:*`)
     .join(" & ");
-  console.log(tsQuery);
   const query = `
     SELECT h.headline, h.uri
     FROM nyt.articles AS a
