@@ -46,8 +46,7 @@ const removeDoubleHeadline = (headline) => {
   return headline;
 };
 
-const loadNYTHeadlinesDOM = async (dbClient) => {
-  const browser = await puppeteer.launch();
+const loadNYTHeadlinesDOM = async (dbClient, browser) => {
   const page = await loadNYTHomepage(browser);
   const headings = await page.$$("h2, h3");
   const results = [];
@@ -81,7 +80,6 @@ const loadNYTHeadlinesDOM = async (dbClient) => {
       }
     }
   }
-  browser.close();
   return results;
 };
 
@@ -149,13 +147,21 @@ const upsertArticleByUrl = async (dbClient, url) => {
 const takeHeadlineSnapshot = async () => {
   logger.info("Script started");
   const dbClient = await newDBClient();
-  const headlineInfo = await loadNYTHeadlinesDOM(dbClient);
-  for (const hi of headlineInfo) {
-    await addHeadline(dbClient, hi);
-    // await upsertArticleByUri(dbClient, hi.uri);
+  const browser = await puppeteer.launch();
+
+  try {
+    const headlineInfo = await loadNYTHeadlinesDOM(dbClient, browser);
+    for (const hi of headlineInfo) {
+      await addHeadline(dbClient, hi);
+    }
+    logger.info(`Saved ${headlineInfo.length} headlines to DB`);
+  } catch (e) {
+    Sentry.captureException(e);
+    logger.error(e);
+  } finally {
+    dbClient.end();
+    browser.close();
   }
-  dbClient.end();
-  logger.info(`Saved ${headlineInfo.length} headlines to DB`);
 };
 
 const updateArticleData = async () => {
@@ -171,12 +177,7 @@ const updateArticleData = async () => {
   dbClient.end();
 };
 
-try {
-  takeHeadlineSnapshot();
-} catch (e) {
-  Sentry.captureException(e);
-  logger.error(e);
-}
+takeHeadlineSnapshot();
 
 // updateArticleData();
 
