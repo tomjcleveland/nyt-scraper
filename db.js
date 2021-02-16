@@ -46,9 +46,27 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
 
 exports.fetchArticleById = async (client, id) => {
   const query = `
-  SELECT * FROM nyt.articles WHERE uri=$1`;
+    SELECT
+      h.uri AS id,
+      h.headline,
+      a.weburl,
+      a.abstract,
+      a.imageurl,
+      a.headline AS canonicalheadline,
+      a.printheadline,
+      COUNT(*),
+      MAX(retrieved) AS lastRetrieved
+    FROM nyt.articles AS a
+      JOIN nyt.headlines AS h ON a.uri=h.uri
+    WHERE h.uri=$1
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+  `;
   const res = await client.query(query, [id]);
-  return res.rows[0] || null;
+  if (res.rows.length === 0) {
+    return null;
+  }
+  const article = await articleFromheadlines(client, id, res.rows);
+  return article;
 };
 
 exports.addArticleDetails = async (client, article) => {
@@ -113,10 +131,11 @@ exports.queryHeadlines = async (client, searchQuery) => {
     .map((w) => `${w}:*`)
     .join(" & ");
   const query = `
-    SELECT h.headline, h.uri
+    SELECT h.headline, h.uri, MIN(h.retrieved) AS published
     FROM nyt.articles AS a
       JOIN nyt.headlines AS h ON a.uri=h.uri
     WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
+    GROUP BY 1, 2
     LIMIT 10;
   `;
   const res = await client.query(query, [tsQuery]);
@@ -160,33 +179,37 @@ exports.fetchLatestArticles = async (client) => {
   }, {});
   const results = Object.keys(articlesById).map(async (id) => {
     const currHeadlines = articlesById[id];
-    const withPct = currHeadlines.map((currHeadline) => {
-      const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
-      return {
-        ...currHeadline,
-        isCanonical: currHeadline.headline === currHeadline.canonicalHeadline,
-        pct: Math.round((100 * currHeadline.count) / total),
-      };
-    });
-
-    // Get time series for article with multiple headlines
-    let timeSeries = null;
-    if (currHeadlines.length > 1) {
-      timeSeries = await fetchArticleTimeSeries(client, id);
-    }
-
-    return {
-      id,
-      uri: id,
-      url: currHeadlines[0].url,
-      timeSeries,
-      abstract: currHeadlines[0].abstract,
-      imageUrl: currHeadlines[0].imageUrl,
-      canonicalHeadline: currHeadlines[0].canonicalHeadline,
-      printHeadline: currHeadlines[0].printHeadline,
-      headlines: withPct,
-    };
+    return await articleFromheadlines(client, id, currHeadlines);
   });
 
   return Promise.all(results);
+};
+
+const articleFromheadlines = async (dbClient, id, currHeadlines) => {
+  const withPct = currHeadlines.map((currHeadline) => {
+    const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
+    return {
+      ...currHeadline,
+      isCanonical: currHeadline.headline === currHeadline.canonicalHeadline,
+      pct: Math.round((100 * currHeadline.count) / total),
+    };
+  });
+
+  // Get time series for article with multiple headlines
+  let timeSeries = null;
+  if (currHeadlines.length > 1) {
+    timeSeries = await fetchArticleTimeSeries(dbClient, id);
+  }
+
+  return {
+    id,
+    uri: id,
+    url: currHeadlines[0].url,
+    timeSeries,
+    abstract: currHeadlines[0].abstract,
+    imageUrl: currHeadlines[0].imageUrl,
+    canonicalHeadline: currHeadlines[0].canonicalHeadline,
+    printHeadline: currHeadlines[0].printHeadline,
+    headlines: withPct,
+  };
 };

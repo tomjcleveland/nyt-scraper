@@ -21,54 +21,61 @@
   <% if (article.timeSeries) { %>
     <h4 style="margin-top: 8px;">Incidence over time</h4>
     <% const chartId = `chart-${encodeURIComponent(article.canonicalHeadline)}`; %>
-    <canvas id="<%= chartId %>" width="800" height="400"></canvas>
+    <div id="<%= chartId %>"></div>
     <script>
       (() => {
         const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
         const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
-        const ctx = document.getElementById('<%= chartId %>').getContext('2d');
-        const datasets = headlines.map((headline, i) => {
-            return {
-              label: headline,
-              backgroundColor: window.COLORS.LIGHT[i % window.COLORS.LIGHT.length],
-              data: timeSeries
-                .filter((t) => t.headline === headline)
-                .map(t => {
-                  return {
-                      x: new Date(t.minute),
-                      y: Math.round(100 * (t.count / t.total)),
-                    }
-                })
-            }
-          });
-        const myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            datasets,
-          },
-          options: {
-            legend: {
-              position: 'bottom',
-              align: 'start',
-              display: false
-            },
-            scales: {
-              xAxes: [{
-                type: 'time',
-                time: {
-                  unit: 'hour'
-                },
-              }],
-              yAxes: [{
-                ticks: {
-                    suggestedMin: 0,
-                    suggestedMax: 100,
-                    callback: (v) => `${v}%`,
-                }
-              }]
+
+        // Set a callback to run when the Google Visualization API is loaded.
+        google.charts.setOnLoadCallback(drawChart);
+
+        // Callback that creates and populates a data table,
+        // instantiates the pie chart, passes in the data and
+        // draws it.
+        function drawChart() {
+
+          // Create the data table.
+          var data = new google.visualization.DataTable();
+          const valuesByDate = {};
+          for (let i = 0; i < headlines.length; i++) {
+            const headline = headlines[i];
+            for (const point of timeSeries.filter((t) => t.headline === headline)) {
+              let currValues = valuesByDate[point.minute];
+              if (!currValues || currValues.length === 0) {
+                currValues = [];
+                let arrLength = headlines.length;
+                while (arrLength--) currValues.push(0);
+              }
+              currValues[i] = Math.round(100 * (point.count / point.total));
+              valuesByDate[point.minute] = currValues;
             }
           }
-        });
+          const rows = [];
+          for (let key in valuesByDate) {
+            const row = [new Date(key), ...valuesByDate[key]];
+            rows.push(row);
+          }
+          const arr = [['Headline', ...headlines], ...rows];
+          var data = new google.visualization.arrayToDataTable(arr);
+
+          // Set chart options
+          var options = {
+            width: '100%',
+            legend: { position: "none" },
+            // height: 300,
+            bar: {groupWidth: "95%"},
+            colors: window.COLORS.FULL,
+            isStacked: true,
+            vAxis: {
+                format: "#'%'"
+            }
+          };
+
+          // Instantiate and draw our chart, passing in some options.
+          var chart = new google.visualization.ColumnChart(document.getElementById('<%- chartId %>'));
+          chart.draw(data, options);
+        }
       })();
     </script>
   <% } %>

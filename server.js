@@ -12,12 +12,12 @@ const port = 3000;
 
 const COLORS = {
   FULL: [
-    "rgba(239, 68, 68, 1)", // Red 500
-    "rgba(59, 130, 246, 1)", // Blue 500
-    "rgba(16, 185, 129, 1)", // Green 500
-    "rgba(236, 72, 153, 1)", // Pink 500
-    "rgba(245, 158, 11, 1)", // Yellow 500
-    "rgba(139, 92, 246, 1)", // Purple 500
+    "#EF4444", // Red 500
+    "#3B82F6", // Blue 500
+    "#10B981", // Green 500
+    "#EC4899", // Pink 500
+    "#F59E0B", // Yellow 500
+    "#8B5CF6", // Purple 500
   ],
   LIGHT: [
     "rgba(239, 68, 68, 0.2)", // Red 500

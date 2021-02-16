@@ -1,43 +1,17 @@
 <%- include('../partials/header') %>
-
-    <h1>NYT Headlines</h1>
-    <p>A/B tested headlines currently on the <a href="https://www.nytimes.com/">the New York Times' front page</a>.</p>
-
-    <input autocomplete="off" id="search" placeholder="Search headlines...">
-    <script>
-      var countries = [
-          { label: 'United Kingdom', value: 'UK' },
-          { label: 'United States', value: 'US' }
-      ];
-
-      var input = document.getElementById("search");
-
-      autocomplete({
-          input: input,
-          fetch: function(text, update) {
-              text = text.toLowerCase();
-              // you can also use AJAX requests instead of preloaded data
-              var suggestions = countries.filter(n => n.label.toLowerCase().startsWith(text))
-              fetch(`/search?q=${encodeURIComponent(text.toLowerCase())}`)
-                .then((resp) => resp.json())
-                .then((results) => update(results.map(r => ({label: r.headline, value: r.uri.replace('nyt://article/', '')}))));
-          },
-          onSelect: function(item) {
-            document.location.pathname = `/articles/${item.value}`;
-          }
-      });
-    </script>
+    <h2 style="margin-bottom: 0;">Current headlines</h2>    
+    
     <% const abTestedArticles = articles.filter(a => a.headlines.length > 1); %>
     <% const regularArticles = articles.filter(a => a.headlines.length === 1); %>
     <details open>
-      <summary><h2>A/B Tested (<%= abTestedArticles.length %>)</h2></summary>
+      <summary><h3>A/B Tested (<%= abTestedArticles.length %>)</h3></summary>
       <% abTestedArticles.forEach((article) => { %>
         <%- include('../partials/article', { article }) %>
       <% }); %>
     </details>
     
     <details>
-      <summary><h2>Single headlines (<%= regularArticles.length %>)</h2></summary>
+      <summary><h3>Single headlines (<%= regularArticles.length %>)</h3></summary>
       <% regularArticles.forEach((article) => { %>
         <%- include('../partials/article', { article }) %>
       <% }); %>

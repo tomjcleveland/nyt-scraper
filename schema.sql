@@ -67,6 +67,8 @@ CREATE TABLE headlines
 DROP TRIGGER IF EXISTS update_headlines_transaction_columns ON headlines;
 CREATE TRIGGER update_headlines_transaction_columns BEFORE UPDATE ON headlines FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
+CREATE INDEX headlines_search_idx ON headlines USING GIN (to_tsvector('english', headline));
+
 -- Articles
 
 CREATE TABLE articles
@@ -87,4 +89,3 @@ CREATE TABLE articles
 
 DROP TRIGGER IF EXISTS update_articles_transaction_columns ON articles;
 CREATE TRIGGER update_articles_transaction_columns BEFORE UPDATE ON articles FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
-
