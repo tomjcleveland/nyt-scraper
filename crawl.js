@@ -10,16 +10,10 @@ const {
 const Sentry = require("@sentry/node");
 const UserAgent = require("user-agents");
 const logger = require("./logger");
+const sentryInit = require("./sentry");
 const { fetchArticleByUri, fetchArticleByUrl } = require("./nyt");
 
-Sentry.init({
-  dsn:
-    "https://9985c14cd53b4a05a667923881e8fe89@o291791.ingest.sentry.io/5638469",
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
+sentryInit();
 
 const getRandomUserAgent = () => {
   return new UserAgent().toString();

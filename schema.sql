@@ -89,3 +89,42 @@ CREATE TABLE articles
 
 DROP TRIGGER IF EXISTS update_articles_transaction_columns ON articles;
 CREATE TRIGGER update_articles_transaction_columns BEFORE UPDATE ON articles FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
+
+-- View Rankings
+
+CREATE TABLE viewrankings
+(
+    uri TEXT NOT NULL,
+    rank INTEGER  NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
+
+DROP TRIGGER IF EXISTS update_viewrankings_transaction_columns ON viewrankings;
+CREATE TRIGGER update_viewrankings_transaction_columns BEFORE UPDATE ON viewrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
+
+-- Share Rankings
+
+CREATE TABLE sharerankings
+(
+    uri TEXT NOT NULL,
+    rank INTEGER  NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
+
+DROP TRIGGER IF EXISTS update_sharerankings_transaction_columns ON sharerankings;
+CREATE TRIGGER update_sharerankings_transaction_columns BEFORE UPDATE ON sharerankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
+
+-- Email Rankings
+
+CREATE TABLE emailrankings
+(
+    uri TEXT NOT NULL,
+    rank INTEGER  NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
+
+DROP TRIGGER IF EXISTS update_emailrankings_transaction_columns ON emailrankings;
+CREATE TRIGGER update_emailrankings_transaction_columns BEFORE UPDATE ON emailrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();

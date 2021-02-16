@@ -1,4 +1,5 @@
 const { Client } = require("pg");
+const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
 
 exports.newDBClient = async () => {
@@ -183,6 +184,20 @@ exports.fetchLatestArticles = async (client) => {
   });
 
   return Promise.all(results);
+};
+
+const POPTYPE_TO_TABLE = {
+  [POPTYPE.EMAILED]: "emailrankings",
+  [POPTYPE.VIEWED]: "viewrankings",
+  [POPTYPE.SHARED]: "sharerankings",
+};
+
+exports.insertPopularityData = async (client, type, data) => {
+  const table = POPTYPE_TO_TABLE[type];
+  const query = `INSERT INTO nyt.${table} (uri,rank) VALUES ($1,$2)`;
+  for (let datum of data) {
+    await client.query(query, [datum.uri, datum.rank]);
+  }
 };
 
 const articleFromheadlines = async (dbClient, id, currHeadlines) => {
