@@ -65,9 +65,13 @@ exports.fetchPopularArticles = async (type) => {
   return respJSON.results;
 };
 
-exports.fetchArticleByUrl = async (url) => {
-  return fetchArticleHelper("web_url", url, 0);
+const fetchArticleByUrl = async (url) => {
+  const filterQuery = `web_url:("${url}")`;
+  const respJSON = await apiHelper(SEARCH_URL, { fq: filterQuery });
+  return respJSON.response.docs[0];
 };
+
+exports.fetchArticleByUrl = fetchArticleByUrl;
 
 exports.upsertArticleByUri = async (dbClient, uri) => {
   const existingArticle = await fetchArticleDetails(dbClient, uri);
