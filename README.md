@@ -61,3 +61,16 @@ FROM nyt.articles AS a
   JOIN nyt.headlines AS h ON a.uri=h.uri
 WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', 'trump');
 ```
+
+### Popularity
+
+```sql
+SELECT
+  date_trunc('hour', created) AS hour,
+  uri,
+  SUM(rank) / COUNT(*) AS rank
+FROM nyt.viewrankings
+WHERE created > now() - interval '1 day'
+GROUP BY 1, 2
+ORDER BY 1;
+```

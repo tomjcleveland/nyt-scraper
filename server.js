@@ -4,8 +4,13 @@ const {
   fetchLatestArticles,
   queryHeadlines,
   fetchArticleById,
+  fetchRecentPopularityData,
 } = require("./db");
+const { POPTYPE } = require("./enum");
+const logger = require("./logger");
+const { data } = require("./logger");
 const { fetchArticleByUrl } = require("./nyt");
+const { idFromUri } = require("./utils");
 const app = express();
 app.set("view engine", "ejs");
 const port = 3000;
@@ -34,7 +39,24 @@ const COLORS = {
 
   app.get("/", async (req, res) => {
     const articles = await fetchLatestArticles(dbClient);
-    res.render("pages/index", { articles, COLORS });
+    res.render("pages/index", {
+      articles,
+      COLORS,
+    });
+  });
+
+  app.get("/popular", async (req, res) => {
+    const popularityRows = await fetchRecentPopularityData(
+      dbClient,
+      POPTYPE.VIEWED
+    );
+    const headlines = popularityRowsToHeadlines(popularityRows);
+    const popularityDataTable = popularityRowsToDataTable(popularityRows);
+    res.render("pages/popular", {
+      COLORS,
+      headlines,
+      popularityDataTable,
+    });
   });
 
   app.get("/search", async (req, res) => {
@@ -55,6 +77,37 @@ const COLORS = {
   });
 
   app.listen(port, () => {
-    console.log(`nyt-headlines app listening on :${port}`);
+    logger.info(`nyt-headlines app listening on :${port}`);
   });
 })();
+
+const popularityRowsToDataTable = (rows) => {
+  const headlines = [...new Set(rows.map((row) => row.headline))];
+  const rowsByDate = {};
+  for (let row of rows) {
+    const idx = headlines.indexOf(row.headline);
+    const dateFormatted = row.hour.toISOString();
+    let dataRow = rowsByDate[dateFormatted];
+    if (!dataRow) {
+      dataRow = [];
+      let headlineLength = headlines.length;
+      while (headlineLength--) dataRow.push(null);
+    }
+    dataRow[idx] = { v: parseInt(row.rank, 10) * -1, f: row.rank };
+    rowsByDate[dateFormatted] = dataRow;
+  }
+
+  const data = [["Headline", ...headlines]];
+  for (let key in rowsByDate) {
+    data.push([key, ...rowsByDate[key]]);
+  }
+  return data;
+};
+
+const popularityRowsToHeadlines = (rows) => {
+  rows.sort((a, b) => b.hour - a.hour);
+  const latestFetchDate = rows[0].hour;
+  return rows
+    .filter((r) => r.hour.getTime() === latestFetchDate.getTime())
+    .map((h) => ({ id: idFromUri(h.uri), ...h }));
+};

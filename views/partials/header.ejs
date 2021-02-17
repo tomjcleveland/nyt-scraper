@@ -28,6 +28,10 @@
         color: #4B5563;
       }
 
+      p, li {
+        line-height: 1.5;
+      }
+
       input {
         font-size: 1rem;
       }
@@ -78,6 +82,22 @@
       .autocomplete div:hover {
         background-color: #F3F4F6;
       }
+
+      .popularity-chart-container {
+        height: 0;
+        overflow: hidden;
+        padding-top: 100%;
+        background: white;
+        position: relative;
+      }
+
+      #popularity-chart {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
 
@@ -89,7 +109,12 @@
       window.COLORS = JSON.parse('<%- JSON.stringify(COLORS) %>');
     </script>
 
-    <a href="/" class="unstyled-link"><h1 style="margin-bottom: 12px;">NYT Headlines</h1></a>
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <a href="/" class="unstyled-link"><h1 style="margin: 0;">NYT Headlines</h1></a>
+      <div>
+        <a href="/popular">Popular</a>
+      </div>
+    </div>
     <p>Examine the history of any New York Times headline.</p>
     <input autocomplete="off" id="search" placeholder="Search headlines...">
     <script>

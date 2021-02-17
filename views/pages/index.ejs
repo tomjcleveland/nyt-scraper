@@ -6,14 +6,14 @@
     <details open>
       <summary><h3>A/B Tested (<%= abTestedArticles.length %>)</h3></summary>
       <% abTestedArticles.forEach((article) => { %>
-        <%- include('../partials/article', { article }) %>
+        <%- include('../partials/articleSummary', { article }) %>
       <% }); %>
     </details>
     
     <details>
       <summary><h3>Single headlines (<%= regularArticles.length %>)</h3></summary>
       <% regularArticles.forEach((article) => { %>
-        <%- include('../partials/article', { article }) %>
+        <%- include('../partials/articleSummary', { article }) %>
       <% }); %>
     </details>
 <%- include('../partials/footer') %>

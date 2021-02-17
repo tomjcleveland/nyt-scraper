@@ -1,4 +1,5 @@
 const { Client } = require("pg");
+const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
 
@@ -54,12 +55,12 @@ exports.fetchArticleById = async (client, id) => {
       a.abstract,
       a.imageurl,
       a.headline AS canonicalheadline,
-      a.printheadline,
+      a.printheadline AS printheadline,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.articles AS a
-      JOIN nyt.headlines AS h ON a.uri=h.uri
-    WHERE h.uri=$1
+      LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
+    WHERE a.uri=$1
     GROUP BY 1, 2, 3, 4, 5, 6, 7
   `;
   const res = await client.query(query, [id]);
@@ -155,7 +156,7 @@ exports.fetchLatestArticles = async (client) => {
       a.abstract,
       a.imageurl,
       a.headline AS canonicalheadline,
-      a.printheadline,
+      a.printheadline AS printheadline,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.headlines AS h
@@ -173,8 +174,8 @@ exports.fetchLatestArticles = async (client) => {
       url: curr.weburl,
       abstract: curr.abstract,
       imageUrl: curr.imageurl,
-      canonicalHeadline: curr.canonicalheadline,
-      printHeadline: curr.printheadline,
+      canonicalheadline: curr.canonicalheadline,
+      printheadline: curr.printheadline,
     });
     return acc;
   }, {});
@@ -184,6 +185,11 @@ exports.fetchLatestArticles = async (client) => {
   });
 
   return Promise.all(results);
+};
+
+exports.addDeletedArticle = async (client, uri, headline) => {
+  const query = `INSERT INTO nyt.deletedarticles (uri, headline) VALUES ($1,$2)`;
+  await client.query(query, [uri, headline]);
 };
 
 const POPTYPE_TO_TABLE = {
@@ -200,12 +206,30 @@ exports.insertPopularityData = async (client, type, data) => {
   }
 };
 
+exports.fetchRecentPopularityData = async (client, type) => {
+  const table = POPTYPE_TO_TABLE[type];
+  const query = `
+    SELECT
+      date_trunc('hour', p.created) AS hour,
+      p.uri,
+      a.headline,
+      a.weburl,
+      SUM(p.rank) / COUNT(p.rank) AS rank
+    FROM nyt.${table} AS p
+      JOIN nyt.articles AS a ON a.uri=p.uri
+    WHERE p.created > now() - interval '1 day'
+    GROUP BY 1, 2, 3, 4
+    ORDER BY 1;`;
+  const res = await client.query(query);
+  return res.rows;
+};
+
 const articleFromheadlines = async (dbClient, id, currHeadlines) => {
   const withPct = currHeadlines.map((currHeadline) => {
     const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
     return {
       ...currHeadline,
-      isCanonical: currHeadline.headline === currHeadline.canonicalHeadline,
+      isCanonical: currHeadline.headline === currHeadline.canonicalheadline,
       pct: Math.round((100 * currHeadline.count) / total),
     };
   });
@@ -217,14 +241,14 @@ const articleFromheadlines = async (dbClient, id, currHeadlines) => {
   }
 
   return {
-    id,
+    id: idFromUri(id),
     uri: id,
-    url: currHeadlines[0].url,
+    url: currHeadlines[0].weburl,
     timeSeries,
     abstract: currHeadlines[0].abstract,
-    imageUrl: currHeadlines[0].imageUrl,
-    canonicalHeadline: currHeadlines[0].canonicalHeadline,
-    printHeadline: currHeadlines[0].printHeadline,
+    imageUrl: currHeadlines[0].imageurl,
+    canonicalheadline: currHeadlines[0].canonicalheadline,
+    printheadline: currHeadlines[0].printheadline,
     headlines: withPct,
   };
 };

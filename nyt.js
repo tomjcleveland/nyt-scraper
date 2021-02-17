@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const { queryHeadlines } = require("./db");
+const { queryHeadlines, addDeletedArticle } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
 const {
@@ -47,12 +47,22 @@ const apiHelper = async (url, params, numRetries) => {
 };
 
 const fetchArticleByUri = async (uri) => {
-  const filterQuery = `uri:("${uri}")`;
+  return fetchArticleHelper("uri", uri);
+};
+
+const fetchArticleByUrl = async (url) => {
+  return fetchArticleHelper("web_url", url);
+};
+
+const fetchArticleHelper = async (field, value) => {
+  const filterQuery = `${field}:("${value}")`;
   const respJSON = await apiHelper(SEARCH_URL, { fq: filterQuery });
   return respJSON.response.docs[0];
 };
 
 exports.fetchArticleByUri = fetchArticleByUri;
+
+exports.fetchArticleByUrl = fetchArticleByUrl;
 
 const POPTYPE_TO_URL = {
   [POPTYPE.EMAILED]: EMAILS_URL,
@@ -65,38 +75,32 @@ exports.fetchPopularArticles = async (type) => {
   return respJSON.results;
 };
 
-const fetchArticleByUrl = async (url) => {
-  const filterQuery = `web_url:("${url}")`;
-  const respJSON = await apiHelper(SEARCH_URL, { fq: filterQuery });
-  return respJSON.response.docs[0];
-};
-
-exports.fetchArticleByUrl = fetchArticleByUrl;
-
 exports.upsertArticleByUri = async (dbClient, uri) => {
-  const existingArticle = await fetchArticleDetails(dbClient, uri);
-  if (!existingArticle) {
-    logger.info(`Fetching article metadata for ${uri}`);
-    const fetchedArticle = await fetchArticleByUri(uri);
-    if (!fetchedArticle) {
-      throw new Error(`No article found for uri ${uri}`);
-    }
-    await addArticleDetails(dbClient, fetchedArticle);
-  }
+  return upsertArticleHelper(dbClient, uri, false);
 };
 
 exports.upsertArticleByUrl = async (dbClient, url) => {
-  let article = await fetchArticleDetailsByUrl(dbClient, url);
+  return upsertArticleHelper(dbClient, url, true);
+};
+
+const upsertArticleHelper = async (dbClient, id, isUrl) => {
+  let article;
+  let field;
+  if (isUrl) {
+    field = "web_url";
+    article = await fetchArticleDetailsByUrl(dbClient, id);
+  } else {
+    field = "uri";
+    article = await fetchArticleDetails(dbClient, id);
+  }
   if (!article) {
-    logger.info(`Fetching article metadata for ${url}`);
-    article = await fetchArticleByUrl(url);
-    if (article) {
-      try {
-        await addArticleDetails(dbClient, article);
-      } catch (err) {
-        logger.error(err);
-      }
+    logger.info(`Fetching article metadata for ${id}`);
+    article = await fetchArticleHelper(field, id);
+    if (!article) {
+      logger.info();
+      throw new Error(`No article found for ${isUrl ? "URL" : "URI"} ${id}`);
     }
+    article = await addArticleDetails(dbClient, article);
   }
   return article;
 };

@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+  <h2>Top headlines</h2>
+    <ol>
+      <% headlines.forEach((headline) => { %>
+        <li><a href="/articles/<%- headline.id %>"><%= headline.headline %></a></li>
+      <% }) %>
+    </ol>
+    <div class="popularity-chart-container">
+      <div id="popularity-chart"></div>
+    </div>
+    <script>
+      (() => {
+        const popularityData = JSON.parse('<%- JSON.stringify(popularityDataTable) %>');
+        for (let i = 1; i < popularityData.length; i++) {
+          popularityData[i][0] = new Date(popularityData[i][0]);
+        }
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+          var data = google.visualization.arrayToDataTable(popularityData);
+          let ticks = [];
+          for (let i = 1; i <= 20; i++) {
+            ticks.push({v: -1 * i, f: i.toString()});
+          }
+          var options = {
+            vAxis: {
+              ticks,
+            },
+            legend: {
+              maxLines: 20
+            },
+            pointSize: 5,
+            chartArea: {
+              width: '90%',
+              height: '90%'
+            },
+            legend: { position: 'none' }
+          };
+
+          var chart = new google.visualization.LineChart(document.getElementById('popularity-chart'));
+
+          chart.draw(data, options);
+        }
+      })();
+    </script>
+<%- include('../partials/footer') %>

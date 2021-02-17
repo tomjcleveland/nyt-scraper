@@ -1,4 +1,7 @@
 <%- include('../partials/header') %>
-<h1><%= article.printheadline %></h1>
+<h1><%= article.headline || article.canonicalheadline %></h1>
+<% if (article.imageUrl) { %>
+  <img style="width: 100%;" src="<%= article.imageUrl %>">
+<% } %>
 <%- include('../partials/article', { article }) %>
 <%- include('../partials/footer') %>

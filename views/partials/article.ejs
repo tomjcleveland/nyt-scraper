@@ -1,13 +1,8 @@
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>
-<h3>
-  <a href="<%= topHeadline.url %>">
-    <%= topHeadline.headline %>
-  </a>
-</h3>
-<p><%= topHeadline.abstract %></p>
+<p><%= topHeadline.abstract %> <a href="<%= article.url %>">Read full article</a></p>
 <div class="headline-details">
-  <p><em>Print headline: <%= article.printHeadline || article.canonicalHeadline %></em></p>
+  <p><em>Print headline: <%= article.printheadline || article.canonicalheadline %></em></p>
   <% if (headlinesSorted.length > 1) { %>
     <h4 style="margin: 0;">A/B tested headlines (incidence)</h4>
     <ol>
@@ -20,7 +15,7 @@
   <% } %>
   <% if (article.timeSeries) { %>
     <h4 style="margin-top: 8px;">Incidence over time</h4>
-    <% const chartId = `chart-${encodeURIComponent(article.canonicalHeadline)}`; %>
+    <% const chartId = `chart-${encodeURIComponent(article.canonicalheadline)}`; %>
     <div id="<%= chartId %>"></div>
     <script>
       (() => {
