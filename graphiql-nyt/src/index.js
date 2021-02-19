@@ -29,14 +29,16 @@ const container = document.getElementById("root");
 
 const defaultQuery = `
 {
-  allFilms {
-    edges {
-      node {
-        id
-        title
-        producers
-        episodeID
-        created
+  article(id: "nyt://article/5c4506e8-e8c6-5e88-a165-3541e93bea08") {
+    headline {
+      default
+    }
+    url
+    summary
+    promotionalMedia {
+      __typename
+      ... on Image {
+        url
       }
     }
   }
