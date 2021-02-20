@@ -46,6 +46,10 @@ const defaultQuery = `
 `;
 
 render(
-  <GraphiQL fetcher={graphQLFetcher} defaultQuery={defaultQuery} />,
+  <GraphiQL
+    docExplorerOpen={true}
+    fetcher={graphQLFetcher}
+    defaultQuery={defaultQuery}
+  />,
   container
 );
