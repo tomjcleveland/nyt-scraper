@@ -1,0 +1,96 @@
+query {
+  article(id: "nyt://article/76072ea6-6ddb-56ed-9c46-4d5eb10085fd") {
+    bylines {
+      renderedRepresentation
+      creators {
+        ... on Person {
+          givenName
+          stream(first: 100) {
+            edges {
+              listPromotionalProperties {
+                headline
+              }
+              node {
+                promotionalSummary
+                ... on Article {
+                  headline {
+                    default
+                  }
+                  bylines {
+                    renderedRepresentation
+                    creators {
+                      ... on Person {
+                        givenName
+                        stream(first: 100) {
+                          edges {
+                            listPromotionalProperties {
+                              headline
+                            }
+                            node {
+                              promotionalSummary
+                              ... on Article {
+                                headline {
+                                  default
+                                }
+                                bylines {
+                                  renderedRepresentation
+                                  creators {
+                                    ... on Person {
+                                      givenName
+                                      stream(first: 100) {
+                                        edges {
+                                          listPromotionalProperties {
+                                            headline
+                                          }
+                                          node {
+                                            promotionalSummary
+                                            ... on Article {
+                                              headline {
+                                                default
+                                              }
+                                              bylines {
+                                                renderedRepresentation
+                                                creators {
+                                                  ... on Person {
+                                                    givenName
+                                                    stream(first: 100) {
+                                                      edges {
+                                                        listPromotionalProperties {
+                                                          headline
+                                                        }
+                                                        node {
+                                                          promotionalSummary
+                                                          ... on Article {
+                                                            headline {
+                                                              default
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
