@@ -114,14 +114,37 @@ const fetchArticleTimeSeries = async (client, uri) => {
       WHERE uri=$1
       GROUP BY 1
       ORDER BY 1 DESC
+    ),
+    viewsperminute AS (
+      SELECT
+        date_trunc('hour', r.created) + date_part('minute', r.created)::int / 30 * interval '30 minutes' AS period,
+        SUM(r.rank) / COUNT(*) AS rank
+      FROM nyt.viewrankings AS r
+      WHERE r.uri=$1
+      GROUP BY 1
     )
     SELECT
       minutecounts.minute,
+      viewsperminute.rank,
       headline,
       minutecounts.count AS count,
       totalperminute.count AS total
     FROM minutecounts
-    JOIN totalperminute ON totalperminute.minute=minutecounts.minute;
+    JOIN totalperminute ON totalperminute.minute=minutecounts.minute
+    LEFT JOIN viewsperminute ON minutecounts.minute=viewsperminute.period
+  `;
+  const res = await client.query(query, [uri]);
+  return res.rows;
+};
+
+exports.fetchArticlePopularitySeries = async (client, uri) => {
+  const query = `
+    SELECT
+      date_trunc('hour', r.created) + date_part('minute', r.created)::int / 30 * interval '30 minutes' AS period,
+      SUM(r.rank) / COUNT(*) AS rank
+    FROM nyt.viewrankings AS r
+    WHERE r.uri='nyt://article/5829a960-5dde-5e6d-9fa1-b0afd8252c45'
+    GROUP BY 1
   `;
   const res = await client.query(query, [uri]);
   return res.rows;

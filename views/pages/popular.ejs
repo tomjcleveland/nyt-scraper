@@ -5,8 +5,8 @@
         <li><a href="/articles/<%- headline.id %>"><%= headline.headline %></a></li>
       <% }) %>
     </ol>
-    <div class="popularity-chart-container">
-      <div id="popularity-chart"></div>
+    <div class="aspect aspect-1-1">
+      <div class="aspect-contents" id="popularity-chart"></div>
     </div>
     <script>
       (() => {
@@ -25,9 +25,6 @@
           var options = {
             vAxis: {
               ticks,
-            },
-            legend: {
-              maxLines: 20
             },
             pointSize: 5,
             chartArea: {

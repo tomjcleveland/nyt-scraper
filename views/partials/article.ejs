@@ -16,11 +16,14 @@
   <% if (article.timeSeries) { %>
     <h4 style="margin-top: 8px;">Incidence over time</h4>
     <% const chartId = `chart-${encodeURIComponent(article.canonicalheadline)}`; %>
-    <div id="<%= chartId %>"></div>
+    <div class="aspect aspect-16-9">
+      <div class="aspect-contents" id="<%= chartId %>"></div>  
+    </div>
     <script>
       (() => {
         const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
         const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
+        const hasRanks = timeSeries.map(t => t.rank).filter(r => !!r).length !== 0;
 
         // Set a callback to run when the Google Visualization API is loaded.
         google.charts.setOnLoadCallback(drawChart);
@@ -31,6 +34,8 @@
         function drawChart() {
 
           // Create the data table.
+          // Rows: Periods
+          // Columns: [...Headlines, Rank]
           var data = new google.visualization.DataTable();
           const valuesByDate = {};
           for (let i = 0; i < headlines.length; i++) {
@@ -41,6 +46,9 @@
                 currValues = [];
                 let arrLength = headlines.length;
                 while (arrLength--) currValues.push(0);
+                if (hasRanks) {
+                  currValues.push(Number.isNaN(parseInt(point.rank, 10)) ? null : -1 * parseInt(point.rank, 10));
+                }
               }
               currValues[i] = Math.round(100 * (point.count / point.total));
               valuesByDate[point.minute] = currValues;
@@ -51,21 +59,41 @@
             const row = [new Date(key), ...valuesByDate[key]];
             rows.push(row);
           }
-          const arr = [['Headline', ...headlines], ...rows];
+          const arr = [['Period', ...headlines], ...rows.sort((a, b) => a[0] - b[0])];
+          if (hasRanks) {
+            arr[0].push('Ranks');
+          }
           var data = new google.visualization.arrayToDataTable(arr);
 
           // Set chart options
           var options = {
             width: '100%',
             legend: { position: "none" },
-            // height: 300,
             bar: {groupWidth: "95%"},
             colors: window.COLORS.FULL,
             isStacked: true,
-            vAxis: {
-                format: "#'%'"
+            vAxes: [
+              { format: "#'%'", title: 'Headline distribution' }
+            ],
+            chartArea: {
+              height: '80%'
+            },
+            series: {
+              [headlines.length]: {
+                type: 'line',
+                targetAxisIndex: 1,
+                pointSize: 5,
+                color: '#000000'
+              }
             }
           };
+          if (hasRanks) {
+            let ticks = [];
+            for (let i = 1; i <= 20; i++) {
+              ticks.push({v: -1 * i, f: i.toString()});
+            }
+            options.vAxes.push({ ticks, title: 'Rank (by views)' });
+          }
 
           // Instantiate and draw our chart, passing in some options.
           var chart = new google.visualization.ColumnChart(document.getElementById('<%- chartId %>'));
