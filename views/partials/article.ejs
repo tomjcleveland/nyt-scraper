@@ -33,8 +33,6 @@
         const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
         const hasHeadlines = headlines && headlines.length > 0 && !!headlines[0];
         const hasRanks = timeSeries.map(t => t.rank).filter(r => !!r).length !== 0;
-        console.log('hasRanks', hasRanks)
-        console.log(timeSeries.map(t => t.rank))
 
         // Set a callback to run when the Google Visualization API is loaded.
         google.charts.setOnLoadCallback(drawChart);
@@ -82,7 +80,6 @@
           if (hasRanks) {
             arr[0].push('Rank');
           }
-          console.log(arr);
           var data = new google.visualization.arrayToDataTable(arr);
 
           var options = {
