@@ -134,7 +134,14 @@ const fetchArticleTimeSeries = async (client, uri) => {
     LEFT JOIN viewsperminute ON minutecounts.minute=viewsperminute.period
   `;
   const res = await client.query(query, [uri]);
-  return res.rows;
+  return res.rows.map((ts) => {
+    return {
+      ...ts,
+      rank: parseFloat(ts.rank),
+      count: parseInt(ts.count, 10),
+      total: parseInt(ts.total, 10),
+    };
+  });
 };
 
 exports.fetchArticlePopularitySeries = async (client, uri) => {

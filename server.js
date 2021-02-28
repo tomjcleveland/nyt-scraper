@@ -41,7 +41,6 @@ const COLORS = {
 
   app.get("/", async (req, res) => {
     const articles = await fetchLatestArticles(dbClient);
-    console.log(JSON.stringify(articles, null, 3));
     res.render("pages/index", {
       articles,
       COLORS,
