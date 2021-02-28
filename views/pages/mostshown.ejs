@@ -1,0 +1,7 @@
+<%- include('../partials/header') %>
+    <h2 style="margin-bottom: 0;">Most shown headlines</h2>
+    <p>These headlines spent the most time on the front page.</p>
+    <% articles.sort((a, b) => a.rank - b.rank).forEach((article) => { %>
+      <%- include('../partials/articleSummary', { article }) %>
+    <% }); %>
+<%- include('../partials/footer') %>

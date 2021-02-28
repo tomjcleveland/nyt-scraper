@@ -10,6 +10,7 @@
  * @property {string} canonicalheadline The canonical headline for this article, provided by the API
  * @property {string} printheadline The print headline for this article, provided by the API
  * @property {string} imageUrl The full URL to an NYT-hosted image
+ * @property {number} frontPagePeriods The number of periods (usually 30 minutes long) that an article has been seen on the NYT front page
  * @property {Headline[]} headlines All headlines observed for this article
  * @property {HeadlinePoint[]} timeSeries Rank/headline data over time
  */

@@ -9,6 +9,7 @@ const {
   fetchDeletedHeadlines,
   fetchCurrentArticles,
   fetchMostViewedArticles,
+  fetchMostShownArticles,
 } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -53,6 +54,14 @@ const COLORS = {
   app.get("/frontpage", async (req, res) => {
     const articles = await fetchCurrentArticles(dbClient);
     res.render("pages/frontpage", {
+      articles,
+      COLORS,
+    });
+  });
+
+  app.get("/mostshown", async (req, res) => {
+    const articles = await fetchMostShownArticles(dbClient);
+    res.render("pages/mostshown", {
       articles,
       COLORS,
     });

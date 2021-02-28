@@ -1,6 +1,8 @@
-<h3>
-  <a href="/articles/<%- article.id %>">
-    <%= article.headlines[0].headline %>
-  </a>
-</h3>
-<%- include('./article', { article }) %>
+<div class="article-summary">
+  <h3 style="margin-top: 0;">
+    <a href="/articles/<%- article.id %>">
+      <%= article.headlines[0].headline %>
+    </a>
+  </h3>
+  <%- include('./article', { article }) %>
+</div>

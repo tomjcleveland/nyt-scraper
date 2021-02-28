@@ -1,13 +1,21 @@
-<% if (article.rank) { %>
+<% if (article.rank || article.frontPagePeriods) { %>
   <div class="pill-box">
-    <div class="pill">
-      <strong><%= ordinal(article.rank) %></strong>-most viewed
-    </div>
+    <% if (article.rank) { %>
+      <div class="pill">
+        <strong><%= ordinal(article.rank) %></strong>-most viewed
+      </div>
+    <% } %>
+    <% if (article.frontPagePeriods) { %>
+      <div class="pill">
+        <strong><%= Math.round(article.frontPagePeriods / 2) %> hours</strong> on the front page
+      </div>
+    <% } %>
   </div>
 <% } %>
 
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>
+<p><%= article.abstract %></p>
 <p><%= topHeadline.abstract %> <a href="<%= article.url %>">Read full article</a></p>
 <div class="headline-details">
   <p><em>Print headline: <%= article.printheadline || article.canonicalheadline %></em></p>
@@ -121,4 +129,3 @@
   <% } %>
   <small><code><%= article.uri %></code></small>
 </div>
-<br>

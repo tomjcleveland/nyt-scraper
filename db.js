@@ -245,6 +245,46 @@ exports.fetchMostViewedArticles = async (client) => {
   return articlesFromHeadlines(client, res.rows);
 };
 
+exports.fetchMostShownArticles = async (client) => {
+  const query = `
+    WITH periodcounts AS (
+      SELECT
+        date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
+        uri,
+        headline,
+        1 AS present
+      FROM nyt.headlines
+      GROUP BY 1, 2, 3, 4
+    ),
+    articlecounts AS (
+      SELECT
+        uri,
+        SUM(present) AS periods
+      FROM periodcounts
+      GROUP BY 1
+      ORDER BY periods DESC
+      LIMIT 10
+    )
+    SELECT
+      h.uri AS id,
+      h.headline,
+      a.weburl,
+      a.abstract,
+      a.imageurl,
+      a.headline AS canonicalheadline,
+      a.printheadline AS printheadline,
+      COUNT(*),
+      MAX(h.retrieved) AS lastRetrieved,
+      MIN(ac.periods) AS periods
+    FROM nyt.headlines AS h
+      JOIN nyt.articles AS a ON h.uri=a.uri
+      INNER JOIN articlecounts AS ac ON ac.uri=a.uri
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    ORDER BY periods DESC`;
+  const res = await client.query(query);
+  return articlesFromHeadlines(client, res.rows);
+};
+
 exports.addDeletedArticle = async (client, uri, headline) => {
   const query = `INSERT INTO nyt.deletedarticles (uri, headline) VALUES ($1,$2)`;
   await client.query(query, [uri, headline]);
@@ -314,12 +354,13 @@ const articlesFromHeadlines = async (
       headline: curr.headline,
       count: parseInt(curr.count, 10),
       retrieved: curr.lastRetrieved,
-      url: curr.weburl,
+      weburl: curr.weburl,
       rank: curr.rank,
       abstract: curr.abstract,
       imageurl: curr.imageurl,
       canonicalheadline: curr.canonicalheadline,
       printheadline: curr.printheadline,
+      periods: curr.periods,
     });
     return acc;
   }, {});
@@ -361,6 +402,7 @@ const articleFromheadlines = async (
     (acc, curr) => acc + parseInt(curr.count, 10),
     0
   );
+  const frontPagePeriods = parseInt(currHeadlines[0].periods, 10);
   const withPct = currHeadlines.map((currHeadline) => {
     const newHeadline = {
       ...currHeadline,
@@ -391,6 +433,7 @@ const articleFromheadlines = async (
     imageUrl,
     canonicalheadline,
     printheadline,
+    frontPagePeriods,
     headlines: withPct,
   };
 };
