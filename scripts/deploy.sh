@@ -4,6 +4,9 @@
 git reset --hard HEAD
 git pull
 
+# Install npm packages
+npm i
+
 # Restart NodeJS service
 sudo service nyt restart
 
