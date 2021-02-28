@@ -1,7 +1,7 @@
 <%- include('../partials/header') %>
   <h2>Top headlines</h2>
     <ol>
-      <% headlines.forEach((headline) => { %>
+      <% headlines.sort((a, b) => a.rank - b.rank).forEach((headline) => { %>
         <li><a href="/articles/<%- headline.id %>"><%= headline.headline %></a></li>
       <% }) %>
     </ol>

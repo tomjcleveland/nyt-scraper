@@ -1,4 +1,5 @@
 const express = require("express");
+const ordinal = require("ordinal");
 const {
   newDBClient,
   fetchLatestArticles,
@@ -13,6 +14,7 @@ const { fetchArticleByUrl } = require("./nyt");
 const { idFromUri } = require("./utils");
 const app = express();
 app.set("view engine", "ejs");
+app.locals.ordinal = ordinal;
 const port = 3000;
 
 const COLORS = {
@@ -39,6 +41,7 @@ const COLORS = {
 
   app.get("/", async (req, res) => {
     const articles = await fetchLatestArticles(dbClient);
+    console.log(JSON.stringify(articles, null, 3));
     res.render("pages/index", {
       articles,
       COLORS,

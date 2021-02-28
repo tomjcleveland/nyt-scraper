@@ -118,7 +118,7 @@ const fetchArticleTimeSeries = async (client, uri) => {
     viewsperminute AS (
       SELECT
         date_trunc('hour', r.created) + date_part('minute', r.created)::int / 30 * interval '30 minutes' AS period,
-        SUM(r.rank) / COUNT(*) AS rank
+        AVG(r.rank) AS rank
       FROM nyt.viewrankings AS r
       WHERE r.uri=$1
       GROUP BY 1
@@ -169,11 +169,12 @@ exports.queryHeadlines = async (client, searchQuery) => {
 
 exports.fetchLatestArticles = async (client) => {
   const query = `
-    WITH current AS (
-      SELECT DISTINCT uri FROM nyt.headlines WHERE retrieved > (now() - interval '30 minutes')
+    WITH latestranked AS (
+      SELECT uri, rank FROM nyt.viewrankings WHERE date_trunc('hour', created)=date_trunc('hour', (SELECT MAX(created) FROM nyt.viewrankings))
     )
     SELECT
       h.uri AS id,
+      latestranked.rank AS rank,
       h.headline,
       a.weburl,
       a.abstract,
@@ -183,9 +184,9 @@ exports.fetchLatestArticles = async (client) => {
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.headlines AS h
-      LEFT JOIN nyt.articles AS a ON h.uri=a.uri
-      INNER JOIN current ON current.uri=a.uri
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
+      JOIN nyt.articles AS a ON h.uri=a.uri
+      INNER JOIN latestranked ON latestranked.uri=a.uri
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
     ORDER BY 4 DESC`;
   const res = await client.query(query);
   const articlesById = res.rows.reduce((acc, curr) => {
@@ -195,8 +196,9 @@ exports.fetchLatestArticles = async (client) => {
       count: parseInt(curr.count, 10),
       retrieved: curr.lastRetrieved,
       url: curr.weburl,
+      rank: curr.rank,
       abstract: curr.abstract,
-      imageUrl: curr.imageurl,
+      imageurl: curr.imageurl,
       canonicalheadline: curr.canonicalheadline,
       printheadline: curr.printheadline,
     });
@@ -237,41 +239,61 @@ exports.fetchRecentPopularityData = async (client, type) => {
       p.uri,
       a.headline,
       a.weburl,
-      SUM(p.rank) / COUNT(p.rank) AS rank
+      AVG(p.rank) AS rank
     FROM nyt.${table} AS p
-      JOIN nyt.articles AS a ON a.uri=p.uri
-    WHERE p.created > now() - interval '1 day'
+    LEFT JOIN nyt.articles AS a ON a.uri=p.uri
+    WHERE date_trunc('hour', p.created)=date_trunc('hour', (SELECT MAX(px.created) FROM nyt.${table} AS px))
     GROUP BY 1, 2, 3, 4
     ORDER BY 1;`;
   const res = await client.query(query);
   return res.rows;
 };
 
+/**
+ *
+ * @param {*} dbClient
+ * @param {string} id
+ * @param {*} currHeadlines
+ * @returns {Article}
+ */
 const articleFromheadlines = async (dbClient, id, currHeadlines) => {
+  const url = currHeadlines[0].weburl;
+  const rank = parseInt(currHeadlines[0].rank, 10);
+  const abstract = currHeadlines[0].abstract;
+  const imageUrl = currHeadlines[0].imageurl;
+  const canonicalheadline = currHeadlines[0].canonicalheadline;
+  const printheadline = currHeadlines[0].printheadline;
   const withPct = currHeadlines.map((currHeadline) => {
     const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
-    return {
+    const newHeadline = {
       ...currHeadline,
-      isCanonical: currHeadline.headline === currHeadline.canonicalheadline,
       pct: Math.round((100 * currHeadline.count) / total),
     };
+    delete newHeadline.weburl;
+    delete newHeadline.rank;
+    delete newHeadline.abstract;
+    delete newHeadline.imageurl;
+    delete newHeadline.canonicalheadline;
+    delete newHeadline.printheadline;
+    return newHeadline;
   });
 
   // Get time series for article with multiple headlines
   let timeSeries = null;
-  if (currHeadlines.length > 1) {
+  if (currHeadlines.length > -1) {
     timeSeries = await fetchArticleTimeSeries(dbClient, id);
   }
 
   return {
     id: idFromUri(id),
     uri: id,
-    url: currHeadlines[0].weburl,
+    url,
+    rank,
     timeSeries,
-    abstract: currHeadlines[0].abstract,
-    imageUrl: currHeadlines[0].imageurl,
-    canonicalheadline: currHeadlines[0].canonicalheadline,
-    printheadline: currHeadlines[0].printheadline,
+    abstract,
+    imageUrl,
+    canonicalheadline,
+    printheadline,
     headlines: withPct,
   };
 };

@@ -1,3 +1,9 @@
+<div class="pill-box">
+  <div class="pill">
+    <strong><%= ordinal(article.rank) %></strong>-most viewed
+  </div>
+</div>
+
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>
 <p><%= topHeadline.abstract %> <a href="<%= article.url %>">Read full article</a></p>
