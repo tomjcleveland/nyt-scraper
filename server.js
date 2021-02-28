@@ -7,6 +7,8 @@ const {
   fetchArticleById,
   fetchRecentPopularityData,
   fetchDeletedHeadlines,
+  fetchCurrentArticles,
+  fetchMostViewedArticles,
 } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -41,8 +43,16 @@ const COLORS = {
   const dbClient = await newDBClient();
 
   app.get("/", async (req, res) => {
-    const articles = await fetchLatestArticles(dbClient);
+    const articles = await fetchMostViewedArticles(dbClient);
     res.render("pages/index", {
+      articles,
+      COLORS,
+    });
+  });
+
+  app.get("/frontpage", async (req, res) => {
+    const articles = await fetchCurrentArticles(dbClient);
+    res.render("pages/frontpage", {
       articles,
       COLORS,
     });

@@ -1,0 +1,7 @@
+<%- include('../partials/header') %>
+    <h2 style="margin-bottom: 0;">Front page</h2>
+    <p>All headlines currently on the NYT homepage.</p>
+    <% articles.forEach((article) => { %>
+      <%- include('../partials/articleSummary', { article }) %>
+    <% }); %>
+<%- include('../partials/footer') %>

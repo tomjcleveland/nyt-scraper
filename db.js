@@ -186,7 +186,41 @@ exports.queryHeadlines = async (client, searchQuery) => {
   return articlesFromHeadlines(client, res.rows, true);
 };
 
-exports.fetchLatestArticles = async (client) => {
+/**
+ * Fetches articles currently on the front page
+ * @param {*} client
+ * @returns {Article[]}
+ */
+exports.fetchCurrentArticles = async (client) => {
+  const query = `
+    WITH lp AS (
+      SELECT MAX(retrieved) AS period FROM nyt.headlines
+    )
+    SELECT
+      h.uri AS id,
+      h.headline,
+      a.weburl,
+      a.abstract,
+      a.imageurl,
+      a.headline AS canonicalheadline,
+      a.printheadline AS printheadline,
+      COUNT(*),
+      MAX(h.retrieved) AS lastRetrieved
+    FROM lp
+      JOIN nyt.headlines AS h ON lp.period=h.retrieved
+      JOIN nyt.articles AS a ON h.uri=a.uri
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    ORDER BY 4 DESC`;
+  const res = await client.query(query);
+  return articlesFromHeadlines(client, res.rows);
+};
+
+/**
+ * Fetches current most-viewed articles, with time series
+ * @param {*} client
+ * @returns {Article[]}
+ */
+exports.fetchMostViewedArticles = async (client) => {
   const query = `
     WITH latestranked AS (
       SELECT uri, rank FROM nyt.viewrankings WHERE date_trunc('hour', created)=date_trunc('hour', (SELECT MAX(created) FROM nyt.viewrankings))
