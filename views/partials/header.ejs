@@ -69,20 +69,6 @@
         padding: 8px;
       }
 
-      .autocomplete {
-        background-color: white;
-        border: 2px solid #4B5563;
-      }
-
-      .autocomplete div {
-        padding: 8px;
-        cursor: pointer;
-      }
-
-      .autocomplete div:hover {
-        background-color: #F3F4F6;
-      }
-
       .aspect {
         height: 0;
         overflow: hidden;
@@ -130,10 +116,10 @@
     <div style="display: flex; align-items: center; justify-content: space-between;">
       <a href="/" class="unstyled-link"><h1 style="margin: 0;">NYT Headlines</h1></a>
       <div>
-        <a href="/popular">Popular</a>
+        <!-- Nav links go here, eventually -->
       </div>
     </div>
-    <p>Examine the history of any New York Times headline.</p>
+    <p>Tracking the <strong>appearance</strong> and <strong>popularity</strong> of New York Times headlines.</p>
     <form action="/search" method="GET">
       <input name="q" autocomplete="off" id="search" placeholder="Search headlines...">
     </form>
