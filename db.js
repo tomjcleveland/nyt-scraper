@@ -124,14 +124,14 @@ const fetchArticleTimeSeries = async (client, uri) => {
       GROUP BY 1
     )
     SELECT
-      minutecounts.minute,
+      COALESCE(minutecounts.minute, viewsperminute.period) AS minute,
       viewsperminute.rank,
       headline,
       minutecounts.count AS count,
       totalperminute.count AS total
     FROM minutecounts
     JOIN totalperminute ON totalperminute.minute=minutecounts.minute
-    LEFT JOIN viewsperminute ON minutecounts.minute=viewsperminute.period
+    FULL OUTER JOIN viewsperminute ON minutecounts.minute=viewsperminute.period
   `;
   const res = await client.query(query, [uri]);
   return res.rows.map((ts) => {
