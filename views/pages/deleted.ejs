@@ -1,0 +1,12 @@
+<%- include('../partials/header') %>
+  <h2>Deleted headlines</h2>
+  <p>These headlines were deleted before we could fetch metadata from the NYT API.</p>
+  <ul>
+    <% deletedHeadlines.forEach((headline) => { %>
+      <li>
+        <p style="margin: 0;"><%= headline.headline %></p>
+        <small><code><%= headline.uri %></code></small>
+      </li>
+    <% }) %>
+  </ul>
+<%- include('../partials/footer') %>

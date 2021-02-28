@@ -158,20 +158,32 @@ exports.fetchArticlePopularitySeries = async (client, uri) => {
 };
 
 exports.queryHeadlines = async (client, searchQuery) => {
+  if (!searchQuery) {
+    return [];
+  }
   const tsQuery = searchQuery
     .split(" ")
     .map((w) => `${w}:*`)
     .join(" & ");
   const query = `
-    SELECT h.headline, h.uri, MIN(h.retrieved) AS published
+    SELECT
+      h.uri AS id,
+      h.headline,
+      a.weburl,
+      a.abstract,
+      a.imageurl,
+      a.headline AS canonicalheadline,
+      a.printheadline AS printheadline,
+      COUNT(*),
+      MAX(retrieved) AS lastRetrieved
     FROM nyt.articles AS a
       JOIN nyt.headlines AS h ON a.uri=h.uri
     WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
-    GROUP BY 1, 2
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
     LIMIT 10;
   `;
   const res = await client.query(query, [tsQuery]);
-  return res.rows;
+  return articlesFromHeadlines(client, res.rows, true);
 };
 
 exports.fetchLatestArticles = async (client) => {
@@ -196,27 +208,7 @@ exports.fetchLatestArticles = async (client) => {
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
     ORDER BY 4 DESC`;
   const res = await client.query(query);
-  const articlesById = res.rows.reduce((acc, curr) => {
-    acc[curr.id] = acc[curr.id] || [];
-    acc[curr.id].push({
-      headline: curr.headline,
-      count: parseInt(curr.count, 10),
-      retrieved: curr.lastRetrieved,
-      url: curr.weburl,
-      rank: curr.rank,
-      abstract: curr.abstract,
-      imageurl: curr.imageurl,
-      canonicalheadline: curr.canonicalheadline,
-      printheadline: curr.printheadline,
-    });
-    return acc;
-  }, {});
-  const results = Object.keys(articlesById).map(async (id) => {
-    const currHeadlines = articlesById[id];
-    return await articleFromheadlines(client, id, currHeadlines);
-  });
-
-  return Promise.all(results);
+  return articlesFromHeadlines(client, res.rows);
 };
 
 exports.addDeletedArticle = async (client, uri, headline) => {
@@ -257,13 +249,74 @@ exports.fetchRecentPopularityData = async (client, type) => {
 };
 
 /**
- *
+ * Fetch headlines whose URIs no longer exist in the public API
+ * @param {*} client
+ * @returns {Headline[]}
+ */
+exports.fetchDeletedHeadlines = async (client) => {
+  const query = `
+    SELECT h.uri, h.headline FROM nyt.headlines AS h LEFT JOIN nyt.articles AS a ON h.uri=a.uri WHERE a.uri IS NULL GROUP BY 1, 2
+  `;
+  const res = await client.query(query);
+  return res.rows;
+};
+
+/**
+ * Create many Articles from headlines data
+ * @param {*} dbClient
+ * @param {*} id
+ * @param {*} currHeadlines
+ * @param {boolean} [skipTimeSeries] If true, skip fetching time series data
+ * @returns {Article[]}
+ */
+const articlesFromHeadlines = async (
+  dbClient,
+  headlineRows,
+  skipTimeSeries
+) => {
+  const articlesById = headlineRows.reduce((acc, curr) => {
+    acc[curr.id] = acc[curr.id] || [];
+    acc[curr.id].push({
+      headline: curr.headline,
+      count: parseInt(curr.count, 10),
+      retrieved: curr.lastRetrieved,
+      url: curr.weburl,
+      rank: curr.rank,
+      abstract: curr.abstract,
+      imageurl: curr.imageurl,
+      canonicalheadline: curr.canonicalheadline,
+      printheadline: curr.printheadline,
+    });
+    return acc;
+  }, {});
+
+  const results = Object.keys(articlesById).map(async (id) => {
+    const currHeadlines = articlesById[id];
+    return await articleFromheadlines(
+      dbClient,
+      id,
+      currHeadlines,
+      skipTimeSeries
+    );
+  });
+
+  return Promise.all(results);
+};
+
+/**
+ * Create a Article object from headline data
  * @param {*} dbClient
  * @param {string} id
  * @param {*} currHeadlines
+ * @param {boolean} [skipTimeSeries] If true, skip fetching time series data
  * @returns {Article}
  */
-const articleFromheadlines = async (dbClient, id, currHeadlines) => {
+const articleFromheadlines = async (
+  dbClient,
+  id,
+  currHeadlines,
+  skipTimeSeries
+) => {
   const url = currHeadlines[0].weburl;
   const rank = parseInt(currHeadlines[0].rank, 10);
   const abstract = currHeadlines[0].abstract;
@@ -287,7 +340,7 @@ const articleFromheadlines = async (dbClient, id, currHeadlines) => {
 
   // Get time series for article with multiple headlines
   let timeSeries = null;
-  if (currHeadlines.length > -1) {
+  if (!skipTimeSeries) {
     timeSeries = await fetchArticleTimeSeries(dbClient, id);
   }
 

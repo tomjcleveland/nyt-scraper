@@ -121,7 +121,6 @@
   </head>
 
   <body>
-    <script src="https://kraaden.github.io/autocomplete/autocomplete.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script>google.charts.load('current', {'packages':['corechart']});</script>
     <script>
@@ -135,20 +134,7 @@
       </div>
     </div>
     <p>Examine the history of any New York Times headline.</p>
-    <input autocomplete="off" id="search" placeholder="Search headlines...">
-    <script>
-      var input = document.getElementById("search");
-      autocomplete({
-          input: input,
-          fetch: function(text, update) {
-              text = text.toLowerCase();
-              fetch(`/search?q=${encodeURIComponent(text.toLowerCase())}`)
-                .then((resp) => resp.json())
-                .then((results) => update(results.map(r => ({label: r.headline, value: r.uri.replace('nyt://article/', '')}))));
-          },
-          onSelect: function(item) {
-            document.location.pathname = `/articles/${item.value}`;
-          }
-      });
-    </script>
+    <form action="/search" method="GET">
+      <input name="q" autocomplete="off" id="search" placeholder="Search headlines...">
+    </form>
     <hr style="margin-top: 24px;">

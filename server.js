@@ -6,6 +6,7 @@ const {
   queryHeadlines,
   fetchArticleById,
   fetchRecentPopularityData,
+  fetchDeletedHeadlines,
 } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -63,7 +64,7 @@ const COLORS = {
 
   app.get("/search", async (req, res) => {
     const results = await queryHeadlines(dbClient, req.query.q);
-    res.json(results);
+    res.render("pages/results", { query: req.query.q, COLORS, results });
   });
 
   app.get("/articles/:id", async (req, res) => {
@@ -72,6 +73,11 @@ const COLORS = {
       `nyt://article/${req.params.id}`
     );
     res.render("pages/article", { article, COLORS });
+  });
+
+  app.get("/deleted", async (req, res) => {
+    const deletedHeadlines = await fetchDeletedHeadlines(dbClient);
+    res.render("pages/deleted", { deletedHeadlines, COLORS });
   });
 
   app.get("/health", async (req, res) => {

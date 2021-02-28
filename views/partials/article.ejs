@@ -1,8 +1,10 @@
-<div class="pill-box">
-  <div class="pill">
-    <strong><%= ordinal(article.rank) %></strong>-most viewed
+<% if (article.rank) { %>
+  <div class="pill-box">
+    <div class="pill">
+      <strong><%= ordinal(article.rank) %></strong>-most viewed
+    </div>
   </div>
-</div>
+<% } %>
 
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% const topHeadline = headlinesSorted[0]; %>

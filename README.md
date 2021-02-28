@@ -207,3 +207,9 @@ query {
 
 regiId: 161029898
 token: 1wbJDKl/3uvaWMkO9w4bEU83RhTjEMkpOntvn1fJwmdbuF8wFXWfM5vDvs0hA8wgd8jOoea6bgYnRn0cf/aw.0nIs8qoykUXHi3DeCo6rhhfUuWtf59mXCFjxDTQO38FS1
+
+## Deleted articles
+
+```sql
+SELECT h.uri, h.headline FROM nyt.headlines AS h LEFT JOIN nyt.articles AS a ON h.uri=a.uri WHERE a.uri IS NULL GROUP BY 1, 2
+```
