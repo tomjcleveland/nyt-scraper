@@ -323,11 +323,14 @@ const articleFromheadlines = async (
   const imageUrl = currHeadlines[0].imageurl;
   const canonicalheadline = currHeadlines[0].canonicalheadline;
   const printheadline = currHeadlines[0].printheadline;
+  const total = currHeadlines.reduce(
+    (acc, curr) => acc + parseInt(curr.count, 10),
+    0
+  );
   const withPct = currHeadlines.map((currHeadline) => {
-    const total = currHeadlines.reduce((acc, curr) => acc + curr.count, 0);
     const newHeadline = {
       ...currHeadline,
-      pct: Math.round((100 * currHeadline.count) / total),
+      pct: Math.round((100 * parseInt(currHeadline.count, 10)) / total),
     };
     delete newHeadline.weburl;
     delete newHeadline.rank;
