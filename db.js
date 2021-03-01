@@ -48,6 +48,23 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
 
 exports.fetchArticleById = async (client, id) => {
   const query = `
+    WITH periodcounts AS (
+      SELECT
+        date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
+        uri,
+        headline,
+        1 AS present
+      FROM nyt.headlines
+      WHERE uri=$1
+      GROUP BY 1, 2, 3, 4
+    ),
+    articlecounts AS (
+      SELECT
+        uri,
+        SUM(present) AS periods
+      FROM periodcounts
+      GROUP BY 1
+    )
     SELECT
       h.uri AS id,
       h.headline,
@@ -57,9 +74,11 @@ exports.fetchArticleById = async (client, id) => {
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
       COUNT(*),
-      MAX(retrieved) AS lastRetrieved
+      MAX(retrieved) AS lastRetrieved,
+      MIN(ac.periods) AS periods
     FROM nyt.articles AS a
       LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
+      JOIN articlecounts AS ac ON ac.uri=a.uri
     WHERE a.uri=$1
     GROUP BY 1, 2, 3, 4, 5, 6, 7
   `;
