@@ -56,7 +56,6 @@ const loadNYTHeadlinesDOM = async (dbClient, browser) => {
     const [anchor] = await heading.$x("ancestor::a");
     if (anchor) {
       const href = await anchor.evaluate((e) => e.getAttribute("href"));
-      const uri = await anchor.evaluate((e) => e.getAttribute("data-uri"));
       let hrefClean = href.split("?")[0];
       if (hrefClean?.startsWith("/")) {
         hrefClean = "https://www.nytimes.com" + hrefClean;

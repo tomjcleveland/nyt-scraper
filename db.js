@@ -214,6 +214,10 @@ exports.fetchCurrentArticles = async (client) => {
   const query = `
     WITH lp AS (
       SELECT MAX(retrieved) AS period FROM nyt.headlines
+    ),
+    latest AS (
+      SELECT h.uri
+      FROM nyt.headlines AS h JOIN lp ON lp.period=h.retrieved
     )
     SELECT
       h.uri AS id,
@@ -225,8 +229,8 @@ exports.fetchCurrentArticles = async (client) => {
       a.printheadline AS printheadline,
       COUNT(*),
       MAX(h.retrieved) AS lastRetrieved
-    FROM lp
-      JOIN nyt.headlines AS h ON lp.period=h.retrieved
+    FROM latest
+      JOIN nyt.headlines AS h ON latest.uri=h.uri
       JOIN nyt.articles AS a ON h.uri=a.uri
     GROUP BY 1, 2, 3, 4, 5, 6, 7
     ORDER BY 4 DESC`;
