@@ -270,21 +270,11 @@ exports.fetchMostViewedArticles = async (client) => {
 
 exports.fetchMostShownArticles = async (client) => {
   const query = `
-    WITH periodcounts AS (
-      SELECT
-        date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
-        uri,
-        headline,
-        1 AS present
-      FROM nyt.headlines
-      GROUP BY 1, 2, 3, 4
-    ),
-    articlecounts AS (
+    WITH topten AS (
       SELECT
         uri,
-        SUM(present) AS periods
-      FROM periodcounts
-      GROUP BY 1
+        periods
+      FROM nyt.articlestats
       ORDER BY periods DESC
       LIMIT 10
     )
@@ -298,10 +288,10 @@ exports.fetchMostShownArticles = async (client) => {
       a.printheadline AS printheadline,
       COUNT(*),
       MAX(h.retrieved) AS lastRetrieved,
-      MIN(ac.periods) AS periods
+      MIN(tt.periods) as periods
     FROM nyt.headlines AS h
       JOIN nyt.articles AS a ON h.uri=a.uri
-      INNER JOIN articlecounts AS ac ON ac.uri=a.uri
+      INNER JOIN topten AS tt ON tt.uri=a.uri
     GROUP BY 1, 2, 3, 4, 5, 6, 7
     ORDER BY periods DESC`;
   const res = await client.query(query);
