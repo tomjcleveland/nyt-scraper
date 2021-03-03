@@ -41,30 +41,35 @@ const COLORS = {
   ],
 };
 
+const renderPage = (req, res, path, vars) => {
+  res.render(path, {
+    ...(vars || {}),
+    COLORS,
+    path: req.path,
+  });
+};
+
 (async () => {
   const dbClient = await newDBClient();
 
   app.get("/", async (req, res) => {
     const articles = await fetchCurrentArticles(dbClient);
-    res.render("pages/frontpage", {
+    renderPage(req, res, "pages/frontpage", {
       articles,
-      COLORS,
     });
   });
 
   app.get("/frontpage", async (req, res) => {
     const articles = await fetchCurrentArticles(dbClient);
-    res.render("pages/frontpage", {
+    renderPage(req, res, "pages/frontpage", {
       articles,
-      COLORS,
     });
   });
 
   app.get("/mostshown", async (req, res) => {
     const articles = await fetchMostShownArticles(dbClient);
-    res.render("pages/mostshown", {
+    renderPage(req, res, "pages/mostshown", {
       articles,
-      COLORS,
     });
   });
 
@@ -75,8 +80,7 @@ const COLORS = {
     );
     const headlines = popularityRowsToHeadlines(popularityRows);
     const popularityDataTable = popularityRowsToDataTable(popularityRows);
-    res.render("pages/popular", {
-      COLORS,
+    renderPage(req, res, "pages/popular", {
       headlines,
       popularityDataTable,
     });
@@ -84,7 +88,15 @@ const COLORS = {
 
   app.get("/search", async (req, res) => {
     const results = await queryHeadlines(dbClient, req.query.q);
-    res.render("pages/results", { query: req.query.q, COLORS, results });
+    renderPage(req, res, "pages/results", {
+      query: req.query.q,
+      results,
+    });
+  });
+
+  app.get("/about", async (req, res) => {
+    const results = await queryHeadlines(dbClient, req.query.q);
+    renderPage(req, res, "pages/about");
   });
 
   app.get("/articles/:id", async (req, res) => {
@@ -96,7 +108,7 @@ const COLORS = {
       res.sendStatus(404);
       return;
     }
-    res.render("pages/article", { article, COLORS });
+    renderPage(req, res, "pages/article", { article });
   });
 
   app.get("/stats", async (req, res) => {
@@ -104,12 +116,12 @@ const COLORS = {
     const sorted = articles.sort((a, b) => {
       return (a.viewRankMin || 21) - (b.viewRankMin || 21);
     });
-    res.render("pages/stats", { articles: sorted, COLORS });
+    renderPage(req, res, "pages/stats", { articles: sorted });
   });
 
   app.get("/deleted", async (req, res) => {
     const deletedHeadlines = await fetchDeletedHeadlines(dbClient);
-    res.render("pages/deleted", { deletedHeadlines, COLORS });
+    renderPage(req, res, "pages/deleted", { deletedHeadlines });
   });
 
   app.get("/health", async (req, res) => {
