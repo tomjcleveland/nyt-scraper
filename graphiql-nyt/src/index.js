@@ -7,7 +7,7 @@ import "graphiql/graphiql.min.css";
 
 import "./index.css";
 
-const URL = "http://localhost/graphql/v2";
+const URL = "https://graphql.nyt.tjcx.me/graphql/v2";
 
 function graphQLFetcher(graphQLParams) {
   return fetch(URL, {
