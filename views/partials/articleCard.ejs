@@ -1,0 +1,21 @@
+<div class="card mb-4 shadow-sm">
+  <div class="row g-0">
+    <div class="col-md-4">
+      <img src="<%= article.imageUrl %>" class="card-img-top" alt="...">
+    </div>
+    <div class="col-md-4">
+      <div class="card-body h-100 d-flex flex-column justify-content-between">
+        <div>
+          <h5 class="card-title"><%= article.canonicalheadline %></h5>
+          <p class="card-text"><%= article.abstract %></p>
+        </div>
+        <a href="/articles/<%= article.id %>" class="stretched-link">See details</a>
+      </div>
+    </div>
+    <div class="col-md-4 bg-light">
+      <div class="card-body">
+        <%- include('../partials/articleStats', { article }) %>
+      </div>
+    </div>
+  </div>
+</div>

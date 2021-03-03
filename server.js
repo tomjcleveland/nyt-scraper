@@ -10,6 +10,7 @@ const {
   fetchCurrentArticles,
   fetchMostViewedArticles,
   fetchMostShownArticles,
+  fetchStats,
 } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -44,8 +45,8 @@ const COLORS = {
   const dbClient = await newDBClient();
 
   app.get("/", async (req, res) => {
-    const articles = await fetchMostViewedArticles(dbClient);
-    res.render("pages/index", {
+    const articles = await fetchCurrentArticles(dbClient);
+    res.render("pages/frontpage", {
       articles,
       COLORS,
     });
@@ -91,7 +92,19 @@ const COLORS = {
       dbClient,
       `nyt://article/${req.params.id}`
     );
+    if (!article) {
+      res.sendStatus(404);
+      return;
+    }
     res.render("pages/article", { article, COLORS });
+  });
+
+  app.get("/stats", async (req, res) => {
+    const articles = await fetchStats(dbClient);
+    const sorted = articles.sort((a, b) => {
+      return (a.viewRankMin || 21) - (b.viewRankMin || 21);
+    });
+    res.render("pages/stats", { articles: sorted, COLORS });
   });
 
   app.get("/deleted", async (req, res) => {

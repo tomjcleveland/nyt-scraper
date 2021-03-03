@@ -48,23 +48,6 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
 
 exports.fetchArticleById = async (client, id) => {
   const query = `
-    WITH periodcounts AS (
-      SELECT
-        date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
-        uri,
-        headline,
-        1 AS present
-      FROM nyt.headlines
-      WHERE uri=$1
-      GROUP BY 1, 2, 3, 4
-    ),
-    articlecounts AS (
-      SELECT
-        uri,
-        SUM(present) AS periods
-      FROM periodcounts
-      GROUP BY 1
-    )
     SELECT
       h.uri AS id,
       h.headline,
@@ -75,10 +58,14 @@ exports.fetchArticleById = async (client, id) => {
       a.printheadline AS printheadline,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved,
-      MIN(ac.periods) AS periods
+      MIN(ast.periods) AS periods,
+      MIN(ast.headlinecount) AS headlinecount,
+      MIN(ast.viewcountmin) AS viewcountmin,
+      MIN(ast.sharecountmin) AS sharecountmin,
+      MIN(ast.emailcountmin) AS emailcountmin
     FROM nyt.articles AS a
       LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
-      JOIN articlecounts AS ac ON ac.uri=a.uri
+      JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
     GROUP BY 1, 2, 3, 4, 5, 6, 7
   `;
@@ -87,7 +74,7 @@ exports.fetchArticleById = async (client, id) => {
     return null;
   }
   const article = await articleFromheadlines(client, id, res.rows);
-  return article;
+  return articleFromStats(article);
 };
 
 exports.addArticleDetails = async (client, article) => {
@@ -193,16 +180,23 @@ exports.queryHeadlines = async (client, searchQuery) => {
       a.imageurl,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      ast.viewcountmin,
+      ast.sharecountmin,
+      ast.emailcountmin,
+      ast.headlinecount,
+      ast.periods,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved
     FROM nyt.articles AS a
       JOIN nyt.headlines AS h ON a.uri=h.uri
+      JOIN nyt.articlestats AS ast ON ast.uri=h.uri
     WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
     LIMIT 10;
   `;
   const res = await client.query(query, [tsQuery]);
-  return articlesFromHeadlines(client, res.rows, true);
+  const articles = await articlesFromHeadlines(client, res.rows, true);
+  return articles.map((a) => articleFromStats(a));
 };
 
 /**
@@ -220,22 +214,49 @@ exports.fetchCurrentArticles = async (client) => {
       FROM nyt.headlines AS h JOIN lp ON lp.period=h.retrieved
     )
     SELECT
-      h.uri AS id,
-      h.headline,
+      a.uri,
       a.weburl,
       a.abstract,
       a.imageurl,
+      a.published,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
-      COUNT(*),
-      MAX(h.retrieved) AS lastRetrieved
+      ast.viewcountmin,
+      ast.sharecountmin,
+      ast.emailcountmin,
+      ast.headlinecount,
+      ast.periods
     FROM latest
-      JOIN nyt.headlines AS h ON latest.uri=h.uri
-      JOIN nyt.articles AS a ON h.uri=a.uri
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
-    ORDER BY 4 DESC`;
+      JOIN nyt.articles AS a ON latest.uri=a.uri
+      JOIN nyt.articlestats AS ast ON ast.uri=a.uri
+    ORDER BY 5 ASC`;
   const res = await client.query(query);
-  return articlesFromHeadlines(client, res.rows);
+  return res.rows.map((a) => articleFromStats(a));
+};
+
+/**
+ * Fetches stats for all articles in time range
+ * @param {*} client
+ * @returns {Article[]}
+ */
+exports.fetchStats = async (client) => {
+  const query = `
+    SELECT
+      a.uri,
+      a.imageurl,
+      a.abstract,
+      a.headline AS canonicalheadline,
+      s.viewcountmin,
+      s.sharecountmin,
+      s.emailcountmin,
+      s.headlinecount,
+      s.periods
+    FROM nyt.articles AS a
+      JOIN nyt.articlestats AS s ON s.uri=a.uri
+    WHERE a.published > now() - interval '1 day'
+  `;
+  const res = await client.query(query);
+  return res.rows.map((a) => articleFromStats(a));
 };
 
 /**
@@ -364,16 +385,10 @@ const articlesFromHeadlines = async (
   const articlesById = headlineRows.reduce((acc, curr) => {
     acc[curr.id] = acc[curr.id] || [];
     acc[curr.id].push({
+      ...curr,
       headline: curr.headline,
       count: parseInt(curr.count, 10),
       retrieved: curr.lastRetrieved,
-      weburl: curr.weburl,
-      rank: curr.rank,
-      abstract: curr.abstract,
-      imageurl: curr.imageurl,
-      canonicalheadline: curr.canonicalheadline,
-      printheadline: curr.printheadline,
-      periods: curr.periods,
     });
     return acc;
   }, {});
@@ -389,6 +404,19 @@ const articlesFromHeadlines = async (
   });
 
   return Promise.all(results);
+};
+
+const articleFromStats = (row) => {
+  return {
+    ...row,
+    id: idFromUri(row.uri),
+    headlineCount: parseInt(row.headlinecount, 10),
+    frontPagePeriods: parseInt(row.periods, 10),
+    viewRankMin: parseInt(row.viewcountmin, 10),
+    shareRankMin: parseInt(row.sharecountmin, 10),
+    emailRankMin: parseInt(row.emailcountmin, 10),
+    imageUrl: row.imageurl || row.imageUrl,
+  };
 };
 
 /**
@@ -411,6 +439,11 @@ const articleFromheadlines = async (
   const imageUrl = currHeadlines[0].imageurl;
   const canonicalheadline = currHeadlines[0].canonicalheadline;
   const printheadline = currHeadlines[0].printheadline;
+  const periods = currHeadlines[0].periods;
+  const viewcountmin = currHeadlines[0].viewcountmin;
+  const sharecountmin = currHeadlines[0].sharecountmin;
+  const emailcountmin = currHeadlines[0].emailcountmin;
+  const headlinecount = currHeadlines[0].headlinecount;
   const total = currHeadlines.reduce(
     (acc, curr) => acc + parseInt(curr.count, 10),
     0
@@ -427,6 +460,11 @@ const articleFromheadlines = async (
     delete newHeadline.imageurl;
     delete newHeadline.canonicalheadline;
     delete newHeadline.printheadline;
+    delete newHeadline.periods;
+    delete newHeadline.viewcountmin;
+    delete newHeadline.sharecountmin;
+    delete newHeadline.emailcountmin;
+    delete newHeadline.headlinecount;
     return newHeadline;
   });
 
@@ -447,6 +485,11 @@ const articleFromheadlines = async (
     canonicalheadline,
     printheadline,
     frontPagePeriods,
+    periods,
+    viewcountmin,
+    sharecountmin,
+    emailcountmin,
+    headlinecount,
     headlines: withPct,
   };
 };

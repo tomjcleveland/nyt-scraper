@@ -1,0 +1,59 @@
+<% const isExtended = typeof extended !== 'undefined' && extended; %>
+<div class="mb-4">
+  <div class="mb-2 d-flex align-items-center">
+    <% for (let i = 0; i < article.headlineCount; i++) { %>
+      <div class="rounded bg-primary me-1 d-flex align-items-center justify-content-center text-light" style="width: 24px; height: 24px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-type" viewBox="0 0 16 16">
+          <path d="M2.244 13.081l.943-2.803H6.66l.944 2.803H8.86L5.54 3.75H4.322L1 13.081h1.244zm2.7-7.923L6.34 9.314H3.51l1.4-4.156h.034zm9.146 7.027h.035v.896h1.128V8.125c0-1.51-1.114-2.345-2.646-2.345-1.736 0-2.59.916-2.666 2.174h1.108c.068-.718.595-1.19 1.517-1.19.971 0 1.518.52 1.518 1.464v.731H12.19c-1.647.007-2.522.8-2.522 2.058 0 1.319.957 2.18 2.345 2.18 1.06 0 1.716-.43 2.078-1.011zm-1.763.035c-.752 0-1.456-.397-1.456-1.244 0-.65.424-1.115 1.408-1.115h1.805v.834c0 .896-.752 1.525-1.757 1.525z"/>
+        </svg>
+      </div>
+    <% } %>
+  </div>
+  <div><strong><%= article.headlineCount %> headlines</strong> observed</div>
+</div>
+<% const frontPageDays = Math.ceil(article.frontPagePeriods / (2 * 24)); %>
+<div class="mb-4">
+  <div class="mb-2 d-flex align-items-center">
+    <% for (let i = 0; i < frontPageDays; i++) { %>
+      <div class="rounded bg-primary me-1 d-flex align-items-center justify-content-center text-light" style="width: 24px; height: 24px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hourglass" viewBox="0 0 16 16">
+          <path d="M2 1.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1h-11a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1-.5-.5zm2.5.5v1a3.5 3.5 0 0 0 1.989 3.158c.533.256 1.011.791 1.011 1.491v.702c0 .7-.478 1.235-1.011 1.491A3.5 3.5 0 0 0 4.5 13v1h7v-1a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351v-.702c0-.7.478-1.235 1.011-1.491A3.5 3.5 0 0 0 11.5 3V2h-7z"/>
+        </svg>
+      </div>
+    <% } %>
+  </div>
+  <div><strong><%= frontPageDays %> day<%= frontPageDays > 1 ? 's' : '' %></strong> on front page</div>
+</div>
+<% if (article.viewRankMin && article.viewRankMin < 21) { %>
+  <% const viewPct = Math.round(((21 - article.viewRankMin) / 20) * 100); %>
+  <div class="mb-3">
+    <div class="progress mb-2" style="height: 4px;">
+      <div class="progress-bar" role="progressbar" style="width: <%= viewPct %>%" aria-valuenow="<%= viewPct %>" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="d-flex align-items-center">
+      <div><strong><%= ordinal(article.viewRankMin) %>-most viewed</strong> at peak </div>
+    </div>
+  </div>
+<% } %>
+<% if (isExtended && article.shareRankMin && article.shareRankMin < 21) { %>
+  <% const sharePct = Math.round(((21 - article.shareRankMin) / 20) * 100); %>
+  <div class="mb-4">
+    <div class="progress mb-2" style="height: 4px;">
+      <div class="progress-bar" role="progressbar" style="width: <%= sharePct %>%" aria-valuenow="<%= sharePct %>" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="d-flex align-items-center">
+      <div><strong><%= ordinal(article.shareRankMin) %>-most shared</strong> at peak </div>
+    </div>
+  </div>
+<% } %>
+<% if (isExtended && article.emailRankMin && article.emailRankMin < 21) { %>
+  <% const emailPct = Math.round(((21 - article.emailRankMin) / 20) * 100); %>
+  <div class="mb-4">
+    <div class="progress mb-2" style="height: 4px;">
+      <div class="progress-bar" role="progressbar" style="width: <%= emailPct %>%" aria-valuenow="<%= emailPct %>" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="d-flex align-items-center">
+      <div><strong><%= ordinal(article.emailRankMin) %>-most emailed</strong> at peak </div>
+    </div>
+  </div>
+<% } %>

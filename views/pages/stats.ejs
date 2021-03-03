@@ -1,0 +1,34 @@
+<%- include('../partials/header') %>
+  <h2>Article stats</h2>
+  <p>High-level stats for <%= articles.length %> articles published in the last week.</p>
+  <% articles.forEach((article) => { %>
+    <%- include('../partials/articleCard', { article }) %>
+  <% }) %>
+  <table id="stats-table">
+    <thead>
+      <tr>
+        <th>Article</th>
+        <th>Hours on front page</th>
+        <th># Headlines</th>
+        <th>Peak view rank</th>
+        <th>Peak share rank</th>
+        <th>Peak email rank</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% articles.forEach((article) => { %>
+        <tr>
+          <td><a href="/articles/<%= article.id %>"><%= article.canonicalheadline %></a></td>
+          <td><%= article.periods / 2 %></td>
+          <td><%= article.headlineCount || 1 %></td>
+          <td><%= article.viewRankMin === 21 ? 'N/A' : article.viewRankMin %></td>
+          <td><%= article.shareRankMin === 21 ? 'N/A' : article.shareRankMin %></td>
+          <td><%= article.emailRankMin === 21 ? 'N/A' : article.emailRankMin %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <script>
+    const dataTable = new simpleDatatables.DataTable("#stats-table");
+  </script>
+<%- include('../partials/footer') %>

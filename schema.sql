@@ -69,9 +69,9 @@ CREATE TRIGGER update_headlines_transaction_columns BEFORE UPDATE ON headlines F
 
 CREATE INDEX headlines_search_idx ON headlines USING GIN (to_tsvector('english', headline));
 
-CREATE TRIGGER headlines_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
-ON headlines
-FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
+-- CREATE TRIGGER headlines_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
+-- ON headlines
+-- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
 
 -- Articles
 
@@ -107,9 +107,9 @@ CREATE TABLE viewrankings
 DROP TRIGGER IF EXISTS update_viewrankings_transaction_columns ON viewrankings;
 CREATE TRIGGER update_viewrankings_transaction_columns BEFORE UPDATE ON viewrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
-CREATE TRIGGER viewrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
-ON viewrankings
-FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
+-- CREATE TRIGGER viewrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
+-- ON viewrankings
+-- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
 
 -- Share Rankings
 
@@ -124,9 +124,9 @@ CREATE TABLE sharerankings
 DROP TRIGGER IF EXISTS update_sharerankings_transaction_columns ON sharerankings;
 CREATE TRIGGER update_sharerankings_transaction_columns BEFORE UPDATE ON sharerankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
-CREATE TRIGGER sharerankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
-ON sharerankings
-FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
+-- CREATE TRIGGER sharerankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
+-- ON sharerankings
+-- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
 
 -- Email Rankings
 
@@ -141,9 +141,9 @@ CREATE TABLE emailrankings
 DROP TRIGGER IF EXISTS update_emailrankings_transaction_columns ON emailrankings;
 CREATE TRIGGER update_emailrankings_transaction_columns BEFORE UPDATE ON emailrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
-CREATE TRIGGER emailrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
-ON emailrankings
-FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
+-- CREATE TRIGGER emailrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
+-- ON emailrankings
+-- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
 
 ------------------------
 -- MATERIALIZED VIEWS --

@@ -1,9 +1,32 @@
 <%- include('../partials/header') %>
-<div class="article-summary">
-  <h1 style="margin-top: 0;"><%= article.headline || article.canonicalheadline %></h1>
-  <% if (article.imageUrl) { %>
-    <img style="width: 100%; margin-bottom: 20px;" src="<%= article.imageUrl %>">
-  <% } %>
-  <%- include('../partials/article', { article }) %>
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 style="card-text"><%= article.headline || article.canonicalheadline %></h1>
+      </div>
+      <% if (article.imageUrl) { %>
+        <img style="width: 100%; margin-bottom: 20px;" src="<%= article.imageUrl %>">
+      <% } %>
+      <div class="card-body">
+        <p><%= article.abstract %></p>
+        <p><a href="<%= article.url %>">Read full article</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 pt-4">
+    <%- include('../partials/articleStats', { article, extended: true }) %>
+  </div>
 </div>
+<div class="row">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="card-text">Headlines and popularity</h3>
+        <%- include('../partials/articleTimeSeries', { article }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- include('../partials/footer') %>

@@ -11,6 +11,10 @@
  * @property {string} printheadline The print headline for this article, provided by the API
  * @property {string} imageUrl The full URL to an NYT-hosted image
  * @property {number} frontPagePeriods The number of periods (usually 30 minutes long) that an article has been seen on the NYT front page
+ * @property {number} viewRankMin The lowest (best) ranking on the top-viewed list
+ * @property {number} shareRankMin The lowest (best) ranking on the top-shared list
+ * @property {number} emailRankMin The lowest (best) ranking on the top-emailed list
+ * @property {number} headlineCount The number of front-page headlines (could be 0)
  * @property {Headline[]} headlines All headlines observed for this article
  * @property {HeadlinePoint[]} timeSeries Rank/headline data over time
  */

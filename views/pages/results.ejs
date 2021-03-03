@@ -1,15 +1,10 @@
 <%- include('../partials/header') %>
-  <h2 style="font-weight: 400;">Results for <strong><%= query %></strong></h2>
-  <% results.forEach((article) => { %>
-    <div style="margin-bottom: 32px;">
-      <a href="/articles/<%= article.id %>"><p><%= article.headlines[0].headline %></p></a>
-      <% if (article.headlines.length > 1) { %>
-        <ul>
-          <% article.headlines.slice(1).forEach((headline) => { %>
-            <li><%= headline.headline %></li>
-          <% }) %>
-        </ul>
-      <% } %>
-    </div>
-  <% }) %>
+<div class="row">
+  <div class="col">
+    <h2 style="font-weight: 400;">Results for <strong><%= query %></strong></h2>
+    <% results.forEach((article) => { %>
+      <%- include('../partials/articleCard', { article }) %>
+    <% }) %>
+  </div>
+</div>
 <%- include('../partials/footer') %>
