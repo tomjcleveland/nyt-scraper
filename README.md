@@ -224,11 +224,13 @@ WITH periodcounts AS (
     headline,
     1 AS present
     FROM nyt.headlines
+    GROUP BY 1, 2, 3, 4
 )
 SELECT
   uri,
   headline,
   SUM(present) AS periods
 FROM periodcounts
+GROUP BY 1, 2
 ORDER BY periods DESC
 ```
