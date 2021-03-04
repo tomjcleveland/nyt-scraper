@@ -54,12 +54,16 @@ const renderPage = (req, res, path, vars) => {
     // the ALB forwards the request
     baseUrl = "https://nyt.tjcx.me";
   }
-  const title = vars?.article
-    ? `${vars.article.canonicalheadline} | NYT Headlines`
-    : "NYT Headlines";
-  const description = vars?.article
-    ? vars.article?.abstract
-    : "Tracking the front page of the New York Times.";
+  const title =
+    vars.title ||
+    (vars?.article
+      ? `${vars.article.canonicalheadline} | NYT Headlines`
+      : "NYT Headlines");
+  const description =
+    vars.description ||
+    (vars?.article
+      ? vars.article?.abstract
+      : "Tracking the front page of the New York Times.");
   const imageUrl =
     vars?.article?.imageUrl || `${baseUrl}/img/nyt-headlines-social.jpg`;
   const openGraphData = {
@@ -99,6 +103,8 @@ const renderPage = (req, res, path, vars) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.VIEWED);
     renderPage(req, res, "pages/mostviewed", {
       articles,
+      title: "Most viewed articles",
+      description: "The 20 most-viewed New York Times articles, right now.",
     });
   });
 
@@ -106,6 +112,8 @@ const renderPage = (req, res, path, vars) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.SHARED);
     renderPage(req, res, "pages/mostshared", {
       articles,
+      title: "Most shared articles",
+      description: "The 20 most-shared New York Times articles, right now.",
     });
   });
 
@@ -113,6 +121,8 @@ const renderPage = (req, res, path, vars) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.EMAILED);
     renderPage(req, res, "pages/mostemailed", {
       articles,
+      title: "Most emailed articles",
+      description: "The 20 most-emailed New York Times articles, right now.",
     });
   });
 
