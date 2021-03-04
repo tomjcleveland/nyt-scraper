@@ -9,7 +9,7 @@
       </div>
     <% } %>
   </div>
-  <div><strong><%= article.headlineCount %> headlines</strong> observed</div>
+  <div><strong><%= article.headlineCount %> headline<%= article.headlineCount > 1 ? 's' : '' %></strong> observed</div>
 </div>
 <% const frontPageDays = Math.ceil(article.frontPagePeriods / (2 * 24)); %>
 <div class="mb-4">
