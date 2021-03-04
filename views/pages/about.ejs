@@ -2,13 +2,10 @@
 <div class="row">
   <div class="col-md-8">
     <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="card-text">About NYT Headlines</h2>
-        <p class="card-text">NYT Headlines tracks articles from the New York Times online edition.</p>
-      </div>
+      <img src="/img/nyt-headlines-social.jpg" class="card-img-top">
     </div>
   </div>
-  <div class="col-md-4 pt-2">
+  <div class="col-md-4 pt-4 px-4">
     <h4>Contact</h4>
     <p>Have a question, comment, or concern? Email me!</p>
     <div class="d-flex align-items-center">
@@ -16,6 +13,32 @@
         <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383l-4.758 2.855L15 11.114v-5.73zm-.034 6.878L9.271 8.82 8 9.583 6.728 8.82l-5.694 3.44A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.739zM1 11.114l4.758-2.876L1 5.383v5.73z"/>
       </svg>
       <div class="ms-2"><strong><a href="mailto:tom@tjcx.me">tom@tjcx.me</a></strong></div>
+    </div>
+  </div>
+</div>
+<div class="row mt-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="card-text">FAQ</h2>
+
+        <h3 class="card-text">Who are you?</h3>
+        <p>My name is Tom. You can read more about me <a href="https://tjcx.me">here</a>.</p>
+
+        <h3 class="card-text">Why did you build this?</h3>
+        <p>Among people I know, the New York Times is the canonical news source. It provides the shared context for most of the conversations I have with people.</p>
+        <p>But despite its importance I don't hear much about <em>how</em> articles end up on the front page, how the headlines are chosen, or what articles people like the most.</p>
+        <p>So I built NYT Headlines to track how NYT articles change over time. This lets me:</p>
+        <ul>
+          <li>See how headlines are A/B tested</li>
+          <li>See what articles spend the most time on the front page</li>
+          <li>See what articles are viewed/shared/emailed the most</li>
+        </ul>
+        <p>If you have any other ideas for what to track on NYT Headlines, <a href="mailto:tom@tjcx.me">let me know!</a></p>
+
+        <h3 class="card-text">Where is this data coming from?</h3>
+        <p>I scrape the NYT homepage every few minutes and pull out all the headlines. I combine this data with canonical article data form <a href="https://developer.nytimes.com/">the New York Times' official API</a>, and serve it up hot to all you fine folks.</p>
+      </div>
     </div>
   </div>
 </div>
