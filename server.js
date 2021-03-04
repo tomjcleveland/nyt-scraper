@@ -44,7 +44,7 @@ const COLORS = {
 };
 
 const renderPage = (req, res, path, vars) => {
-  let hostname = req.hostname;
+  let hostname = req.get("host");
   if (hostname === "localhost") {
     hostname += `:${port}`;
   }
