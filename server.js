@@ -49,15 +49,19 @@ const renderPage = (req, res, path, vars) => {
     hostname += `:${port}`;
   }
   const baseUrl = `${req.protocol}://${hostname}`;
+  const title = vars.article
+    ? `${vars.article.canonicalheadline} | NYT Headlines`
+    : "NYT Headlines";
+  const description = vars.article
+    ? vars.article?.abstract
+    : "Tracking the front page of the New York Times.";
+  const imageUrl =
+    vars.article?.imageUrl || `${baseUrl}/img/nyt-headlines-social.jpg`;
   const openGraphData = {
-    title:
-      `${vars.article?.canonicalheadline} | NYT Headlines` || "NYT Headlines",
-    description:
-      vars.article?.abstract ||
-      "Tracking the front page of the New York Times.",
+    title,
+    description,
+    imageUrl,
     canonicalUrl: `${baseUrl}${req.originalUrl}`,
-    imageUrl:
-      vars.article?.imageUrl || `${baseUrl}/img/nyt-headlines-social.jpg`,
   };
   res.render(path, {
     ...(vars || {}),
