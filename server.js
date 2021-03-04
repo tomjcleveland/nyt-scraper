@@ -55,12 +55,12 @@ const renderPage = (req, res, path, vars) => {
     baseUrl = "https://nyt.tjcx.me";
   }
   const title =
-    vars.title ||
+    vars?.title ||
     (vars?.article
       ? `${vars.article.canonicalheadline} | NYT Headlines`
       : "NYT Headlines");
   const description =
-    vars.description ||
+    vars?.description ||
     (vars?.article
       ? vars.article?.abstract
       : "Tracking the front page of the New York Times.");
