@@ -44,11 +44,13 @@ const COLORS = {
 };
 
 const renderPage = (req, res, path, vars) => {
-  let hostname = req.get("host");
-  if (hostname === "localhost") {
-    hostname += `:${port}`;
+  let baseUrl;
+  const hostname = req.get("host");
+  if (hostname === `localhost:${port}`) {
+    baseUrl = `http://${hostname}`;
+  } else {
+    baseUrl = `https://${hostname}`;
   }
-  const baseUrl = `${req.protocol}://${hostname}`;
   const title = vars?.article
     ? `${vars.article.canonicalheadline} | NYT Headlines`
     : "NYT Headlines";
