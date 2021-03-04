@@ -144,12 +144,17 @@ const renderPage = (req, res, path, vars) => {
     renderPage(req, res, "pages/results", {
       query: req.query.q,
       results,
+      title: `Results for '${req.query.q}' | NYT Headlines`,
+      description: `All articles in the NYT Headlines database for '${req.query.q}'`,
     });
   });
 
   app.get("/about", async (req, res) => {
     const results = await queryHeadlines(dbClient, req.query.q);
-    renderPage(req, res, "pages/about");
+    renderPage(req, res, "pages/about", {
+      title: "About NYT Headlines",
+      description: "We track the front page of the New York Times.",
+    });
   });
 
   app.get("/articles/:id", async (req, res) => {
