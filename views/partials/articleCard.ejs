@@ -1,6 +1,9 @@
 <div class="card mb-4 shadow-sm">
   <div class="row g-0 align-items-stretch">
     <div class="col-md-4">
+      <% if (article.rank) { %>
+        <h2 class="position-absolute ms-3 mt-3"><span class="badge bg-primary">#<%= article.rank %></span></h2>
+      <% } %>
       <% if (article.imageUrl) { %>
         <img style="object-fit: cover;" src="<%= article.imageUrl %>" class="h-100 card-img-top" alt="<%= article.canonicalheadline %>">
       <% } else { %>
@@ -15,6 +18,7 @@
     <div class="col-md-4">
       <div class="card-body h-100 d-flex flex-column justify-content-between">
         <div>
+          <p class="card-text mb-2"><small><%= dayjs(article.published).format('MMMM D, YYYY') %></small></p>
           <h5 class="card-title"><%= article.canonicalheadline %></h5>
           <p class="card-text"><%= article.abstract %></p>
         </div>

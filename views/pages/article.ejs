@@ -3,13 +3,14 @@
   <div class="col-md-8">
     <div class="card shadow-sm">
       <div class="card-body">
+        <p class="card-text mb-1"><%= dayjs(article.published).format('MMMM D, YYYY') %></p>
         <h1 style="card-text"><%= article.headline || article.canonicalheadline %></h1>
       </div>
       <% if (article.imageUrl) { %>
         <img style="width: 100%; margin-bottom: 20px;" src="<%= article.imageUrl %>">
       <% } %>
-      <div class="card-body">
-        <p><%= article.abstract %></p>
+      <div class="card-body pt-0">
+        <p class="mt-0"><%= article.abstract %></p>
         <p><a href="<%= article.url %>">Read full article</a></p>
       </div>
     </div>

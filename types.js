@@ -3,6 +3,7 @@
  * @typedef {Object} Article
  * @property {string} id Unique identifier, the last part of the URI
  * @property {string} uri The NYT URI for this article
+ * @property {number} rank The current rank, within the context of all articles returned
  * @property {number} viewRank The current ranking on the "top viewed" list
  * @property {number} shareRank The current ranking on the "top shared" list
  * @property {number} emailRank The current ranking on the "top emailed" list

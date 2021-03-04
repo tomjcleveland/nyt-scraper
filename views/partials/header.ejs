@@ -5,17 +5,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>NYT Headlines</title>
-    <meta name="description" content="See all A/B-tested NYT headlines" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22256%22 height=%22256%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231f2937%22></rect><path fill=%22%23fff%22 d=%22%22></path></svg>" />
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl">
 
     <script async defer data-domain="nyt.tjcx.me" src="https://analytics.tjcx.me/js/plausible.js"></script>
+
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= canonicalUrl %>" />
+    <meta property="og:image" content="<%= imageUrl %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:site_name" content="NYT Headlines" />
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tomjcleveland">
+    <meta name="twitter:title" content="<%= title %>">
+    <meta name="twitter:description" content="<%= description %>">
+    <meta name="twitter:image:src" content="<%= imageUrl %>">
 
     <style>
       body {
@@ -75,13 +85,13 @@
               <a class="nav-link<%= path === '/' ? ' active' : '' %>" aria-current="page" href="/">Front page</a>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle<%= path.startsWith('/most') ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Popular
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="#">Most viewed</a></li>
-                <li><a class="dropdown-item" href="#">Most shared</a></li>
-                <li><a class="dropdown-item" href="#">Most emailed</a></li>
+                <li><a class="dropdown-item<%= path === '/mostviewed' ? ' active' : '' %>" href="/mostviewed">Most viewed</a></li>
+                <li><a class="dropdown-item<%= path === '/mostshared' ? ' active' : '' %>" href="/mostshared">Most shared</a></li>
+                <li><a class="dropdown-item<%= path === '/mostemailed' ? ' active' : '' %>" href="/mostemailed">Most emailed</a></li>
               </ul>
             </li>
             <li class="nav-item">

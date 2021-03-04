@@ -1,5 +1,6 @@
 const express = require("express");
 const ordinal = require("ordinal");
+const dayjs = require("dayjs");
 const {
   newDBClient,
   fetchLatestArticles,
@@ -20,6 +21,7 @@ const { idFromUri } = require("./utils");
 const app = express();
 app.set("view engine", "ejs");
 app.locals.ordinal = ordinal;
+app.locals.dayjs = dayjs;
 const port = 3000;
 
 const COLORS = {
@@ -42,8 +44,24 @@ const COLORS = {
 };
 
 const renderPage = (req, res, path, vars) => {
+  let hostname = req.hostname;
+  if (hostname === "localhost") {
+    hostname += `:${port}`;
+  }
+  const baseUrl = `${req.protocol}://${hostname}`;
+  const openGraphData = {
+    title:
+      `${vars.article?.canonicalheadline} | NYT Headlines` || "NYT Headlines",
+    description:
+      vars.article?.abstract ||
+      "Tracking the front page of the New York Times.",
+    canonicalUrl: `${baseUrl}${req.originalUrl}`,
+    imageUrl:
+      vars.article?.imageUrl || `${baseUrl}/img/nyt-headlines-social.jpg`,
+  };
   res.render(path, {
     ...(vars || {}),
+    ...openGraphData,
     COLORS,
     path: req.path,
   });
@@ -51,6 +69,8 @@ const renderPage = (req, res, path, vars) => {
 
 (async () => {
   const dbClient = await newDBClient();
+
+  app.use(express.static("public"));
 
   app.get("/", async (req, res) => {
     const articles = await fetchCurrentArticles(dbClient);
@@ -66,9 +86,23 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/mostshown", async (req, res) => {
-    const articles = await fetchMostShownArticles(dbClient);
-    renderPage(req, res, "pages/mostshown", {
+  app.get("/mostviewed", async (req, res) => {
+    const articles = await fetchRecentPopularityData(dbClient, POPTYPE.VIEWED);
+    renderPage(req, res, "pages/mostviewed", {
+      articles,
+    });
+  });
+
+  app.get("/mostshared", async (req, res) => {
+    const articles = await fetchRecentPopularityData(dbClient, POPTYPE.SHARED);
+    renderPage(req, res, "pages/mostshared", {
+      articles,
+    });
+  });
+
+  app.get("/mostemailed", async (req, res) => {
+    const articles = await fetchRecentPopularityData(dbClient, POPTYPE.EMAILED);
+    renderPage(req, res, "pages/mostemailed", {
       articles,
     });
   });

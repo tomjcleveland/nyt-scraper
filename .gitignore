@@ -1,3 +1,4 @@
 node_modules
 fixtures
 graphiql-nyt/node_modules
+.DS_Store

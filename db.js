@@ -340,20 +340,38 @@ exports.insertPopularityData = async (client, type, data) => {
 
 exports.fetchRecentPopularityData = async (client, type) => {
   const table = POPTYPE_TO_TABLE[type];
+  if (!table) return null;
   const query = `
+    WITH latestpopminute AS (
+      SELECT date_trunc('minute', created) AS minute
+      FROM nyt.${table}
+      ORDER BY 1 DESC
+      LIMIT 1
+    ),
+    latestpopdata AS (
+      SELECT uri, rank
+      FROM nyt.${table} AS pr
+      JOIN latestpopminute AS lpm
+        ON date_trunc('minute', pr.created)=lpm.minute
+    )
     SELECT
-      date_trunc('hour', p.created) AS hour,
-      p.uri,
-      a.headline,
-      a.weburl,
-      AVG(p.rank) AS rank
-    FROM nyt.${table} AS p
-    LEFT JOIN nyt.articles AS a ON a.uri=p.uri
-    WHERE date_trunc('hour', p.created)=date_trunc('hour', (SELECT MAX(px.created) FROM nyt.${table} AS px))
-    GROUP BY 1, 2, 3, 4
-    ORDER BY 1;`;
+      lpd.rank,
+      a.uri,
+      a.imageurl,
+      a.abstract,
+      a.published,
+      a.headline AS canonicalheadline,
+      s.viewcountmin,
+      s.sharecountmin,
+      s.emailcountmin,
+      s.headlinecount,
+      s.periods
+    FROM latestpopdata AS lpd
+      JOIN nyt.articles AS a ON a.uri=lpd.uri
+      JOIN nyt.articlestats AS s ON s.uri=a.uri
+    ORDER BY 1 ASC`;
   const res = await client.query(query);
-  return res.rows;
+  return res.rows.map((a) => articleFromStats(a));
 };
 
 /**

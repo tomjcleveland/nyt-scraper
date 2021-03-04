@@ -234,3 +234,32 @@ FROM periodcounts
 GROUP BY 1, 2
 ORDER BY periods DESC
 ```
+
+```sql
+WITH latestpopminute AS (
+  SELECT date_trunc('minute', created) AS minute
+  FROM nyt.viewrankings
+  ORDER BY 1 DESC
+  LIMIT 1
+),
+latestpopdata AS (
+  SELECT uri, rank
+  FROM nyt.viewrankings AS pr
+  JOIN latestpopminute AS lpm
+    ON date_trunc('minute', pr.created)=lpm.minute
+)
+SELECT
+  lpd.rank,
+  a.uri,
+  a.imageurl,
+  a.abstract,
+  a.headline AS canonicalheadline,
+  s.viewcountmin,
+  s.sharecountmin,
+  s.emailcountmin,
+  s.headlinecount,
+  s.periods
+FROM latestpopdata AS lpd
+  JOIN nyt.articles AS a ON a.uri=lpd.uri
+  JOIN nyt.articlestats AS s ON s.uri=a.uri
+```

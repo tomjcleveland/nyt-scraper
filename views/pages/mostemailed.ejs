@@ -1,0 +1,7 @@
+<%- include('../partials/header') %>
+    <h2 style="margin-bottom: 0;">Most emailed articles</h2>
+    <p>The top 20 most-emailed NYT articles, right now.</p>
+    <% articles.forEach((article) => { %>
+      <%- include('../partials/articleCard', { article }) %>
+    <% }); %>
+<%- include('../partials/footer') %>
