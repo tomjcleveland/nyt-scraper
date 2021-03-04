@@ -49,7 +49,10 @@ const renderPage = (req, res, path, vars) => {
   if (hostname === `localhost:${port}`) {
     baseUrl = `http://${hostname}`;
   } else {
-    baseUrl = `https://${hostname}`;
+    // I can't for the life of me figure out
+    // how to get the original hostname after
+    // the ALB forwards the request
+    baseUrl = "https://nyt.tjcx.me";
   }
   const title = vars?.article
     ? `${vars.article.canonicalheadline} | NYT Headlines`
