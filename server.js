@@ -77,6 +77,7 @@ const renderPage = (req, res, path, vars) => {
     ...openGraphData,
     COLORS,
     path: req.path,
+    req,
   });
 };
 
@@ -86,9 +87,11 @@ const renderPage = (req, res, path, vars) => {
   app.use(express.static("public"));
 
   app.get("/", async (req, res) => {
-    const articles = await fetchCurrentArticles(dbClient);
-    renderPage(req, res, "pages/frontpage", {
+    const articles = await fetchRecentPopularityData(dbClient, POPTYPE.VIEWED);
+    renderPage(req, res, "pages/mostviewed", {
       articles,
+      title: "Most viewed articles",
+      description: "The 20 most-viewed New York Times articles, right now.",
     });
   });
 
@@ -114,6 +117,18 @@ const renderPage = (req, res, path, vars) => {
       articles,
       title: "Most shared articles",
       description: "The 20 most-shared New York Times articles, right now.",
+    });
+  });
+
+  app.get("/mostpromoted", async (req, res) => {
+    const articles = await fetchMostShownArticles(
+      dbClient,
+      req.query.duration === "allTime"
+    );
+    renderPage(req, res, "pages/mostshown", {
+      articles,
+      title: "Most promoted articles",
+      description: "The most-promoted articles from the last week.",
     });
   });
 

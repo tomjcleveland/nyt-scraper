@@ -81,18 +81,21 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link<%= path === '/' ? ' active' : '' %>" aria-current="page" href="/">Front page</a>
-            </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle<%= path.startsWith('/most') ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle<%= path.startsWith('/most') || path === '/' ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Popular
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item<%= path === '/mostviewed' ? ' active' : '' %>" href="/mostviewed">Most viewed</a></li>
+                <li><a class="dropdown-item<%= path === '/mostviewed' || path === '/' ? ' active' : '' %>" href="/mostviewed">Most viewed</a></li>
                 <li><a class="dropdown-item<%= path === '/mostshared' ? ' active' : '' %>" href="/mostshared">Most shared</a></li>
                 <li><a class="dropdown-item<%= path === '/mostemailed' ? ' active' : '' %>" href="/mostemailed">Most emailed</a></li>
               </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link<%= path === '/frontpage' ? ' active' : '' %>" aria-current="page" href="/frontpage">Front page</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link<%= path === '/mostpromoted' ? ' active' : '' %>" aria-current="page" href="/mostpromoted">Most promoted</a>
             </li>
             <li class="nav-item">
               <a class="nav-link<%= path === '/about' ? ' active' : '' %>" href="/about">About</a>

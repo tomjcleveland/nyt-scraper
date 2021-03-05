@@ -1,7 +1,16 @@
 <%- include('../partials/header') %>
-    <h2 style="margin-bottom: 0;">Most shown headlines</h2>
-    <p>These headlines spent the most time on the front page.</p>
-    <% articles.sort((a, b) => a.rank - b.rank).forEach((article) => { %>
-      <%- include('../partials/articleSummary', { article }) %>
+    <h2 style="margin-bottom: 0;">Most promoted articles</h2>
+    <p>
+      These are the top-promoted articles
+      <% if (req.query.duration === 'allTime') { %>
+        <strong>of all time.</strong>
+        <a href="/mostpromoted">See data from the last seven days.</a>
+      <% } else { %>
+        <strong>in the last 7 days.</strong>
+        <a href="/mostpromoted?duration=allTime">See all time data.</a>
+      <% } %>
+    </p>
+    <% articles.forEach((article) => { %>
+      <%- include('../partials/articleCard', { article }) %>
     <% }); %>
 <%- include('../partials/footer') %>

@@ -289,34 +289,43 @@ exports.fetchMostViewedArticles = async (client) => {
   return articlesFromHeadlines(client, res.rows);
 };
 
-exports.fetchMostShownArticles = async (client) => {
+exports.fetchMostShownArticles = async (client, allTime) => {
+  let intervalClause = `WHERE a.published > now() - interval '7 days'`;
+  if (allTime) {
+    intervalClause = "";
+  }
   const query = `
     WITH topten AS (
       SELECT
-        uri,
-        periods
-      FROM nyt.articlestats
+        ast.uri,
+        ast.viewcountmin,
+        ast.sharecountmin,
+        ast.emailcountmin,
+        ast.headlinecount,
+        ast.periods
+      FROM nyt.articlestats AS ast
+        JOIN nyt.articles AS a ON a.uri=ast.uri
+      ${intervalClause}
       ORDER BY periods DESC
       LIMIT 10
     )
     SELECT
-      h.uri AS id,
-      h.headline,
+      a.uri,
       a.weburl,
       a.abstract,
       a.imageurl,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
-      COUNT(*),
-      MAX(h.retrieved) AS lastRetrieved,
-      MIN(tt.periods) as periods
-    FROM nyt.headlines AS h
-      JOIN nyt.articles AS a ON h.uri=a.uri
+      tt.viewcountmin,
+      tt.sharecountmin,
+      tt.emailcountmin,
+      tt.headlinecount,
+      tt.periods
+    FROM nyt.articles AS a
       INNER JOIN topten AS tt ON tt.uri=a.uri
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
-    ORDER BY periods DESC`;
+    ORDER BY tt.periods DESC`;
   const res = await client.query(query);
-  return articlesFromHeadlines(client, res.rows);
+  return res.rows.map((a, i) => ({ ...articleFromStats(a), rank: i + 1 }));
 };
 
 exports.addDeletedArticle = async (client, uri, headline) => {
