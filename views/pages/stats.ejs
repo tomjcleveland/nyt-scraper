@@ -1,34 +1,107 @@
 <%- include('../partials/header') %>
-  <h2>Article stats</h2>
-  <p>High-level stats for <%= articles.length %> articles published in the last week.</p>
-  <% articles.forEach((article) => { %>
-    <%- include('../partials/articleCard', { article }) %>
-  <% }) %>
-  <table id="stats-table">
-    <thead>
-      <tr>
-        <th>Article</th>
-        <th>Hours on front page</th>
-        <th># Headlines</th>
-        <th>Peak view rank</th>
-        <th>Peak share rank</th>
-        <th>Peak email rank</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% articles.forEach((article) => { %>
-        <tr>
-          <td><a href="/articles/<%= article.id %>"><%= article.canonicalheadline %></a></td>
-          <td><%= article.periods / 2 %></td>
-          <td><%= article.headlineCount || 1 %></td>
-          <td><%= article.viewRankMin === 21 ? 'N/A' : article.viewRankMin %></td>
-          <td><%= article.shareRankMin === 21 ? 'N/A' : article.shareRankMin %></td>
-          <td><%= article.emailRankMin === 21 ? 'N/A' : article.emailRankMin %></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+  <h2>NYT Statistics</h2>
+  <p>High level stats for <strong><%= stats.articleCount.toLocaleString() %> articles</strong> captured from the New York Times since <strong><%= dayjs(stats.firstCapture).format('MMMM D, YYYY') %></strong>.</p>
+  
+  <h3>Overview</h3>
+  <p>The articles in our database.</p>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="aspect aspect-3-2">
+        <div class="aspect-contents" id="piechart"></div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="mt-4">Headlines per article</h3>
+  <p>The distribution of headlines per article. (Only includes articles that have appeared on the front page.)</p>
+  <div class="aspect aspect-16-9">
+    <div class="aspect-contents" id="headline-histogram"></div>
+  </div>
+
+  <h3 class="mt-4">Days on front page</h3>
+  <p>Visualizing how long articles spend on front page. (Only includes articles that have appeared on the front page.)</p>
+  <div class="aspect aspect-16-9">
+    <div class="aspect-contents" id="days-histogram"></div>
+  </div>
+
+  <h3 class="mt-4">Headlines vs. views</h3>
+  <p>Plotting the number of headlines for an article against its best ranking on the "most viewed" list.</p>
+  <div class="aspect aspect-16-9">
+    <div class="aspect-contents" id="scatter"></div>
+  </div>
   <script>
-    const dataTable = new simpleDatatables.DataTable("#stats-table");
+    const pieChartData = JSON.parse('<%- JSON.stringify(stats.pieChart) %>');
+    const headlineHistogramData = JSON.parse('<%- JSON.stringify(stats.headlineHistogram) %>');
+    const daysHistogramData = JSON.parse('<%- JSON.stringify(stats.daysHistogram) %>');
+    const scatterData = JSON.parse('<%- JSON.stringify(stats.scatter) %>');
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      const dataPieChart = new google.visualization.arrayToDataTable(pieChartData);
+      const chartPieChart = new google.visualization.PieChart(document.getElementById('piechart'));
+      const optionsPieChart = {
+        chartArea: {
+          height: '80%',
+          width: '100%'
+        }
+      };
+      chartPieChart.draw(dataPieChart, optionsPieChart);
+      
+      const dataHeadlineHist = new google.visualization.arrayToDataTable(headlineHistogramData);
+      const chartHeadlineHist = new google.visualization.ColumnChart(document.getElementById('headline-histogram'));
+      const optionsHeadlineHist = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: '# of articles',
+        },
+        hAxis: {
+          title: '# of headlines',
+        },
+        chartArea: {
+          height: '70%',
+        }
+      };
+      chartHeadlineHist.draw(dataHeadlineHist, optionsHeadlineHist);
+
+      const dataDaysHist = new google.visualization.arrayToDataTable(daysHistogramData);
+      const chartDaysHist = new google.visualization.ColumnChart(document.getElementById('days-histogram'));
+      const optionsDaysHist = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: '# of articles',
+        },
+        hAxis: {
+          title: 'Days on front page',
+        },
+        chartArea: {
+          height: '70%'
+        }
+      };
+      chartDaysHist.draw(dataDaysHist, optionsDaysHist);
+
+      const dataScatter = new google.visualization.arrayToDataTable(scatterData);
+      const chartScatter = new google.visualization.ScatterChart(document.getElementById('scatter'));
+      let ticks = [];
+      for (let i = 1; i <= 20; i++) {
+        ticks.push({v: -1 * i, f: i.toString()});
+      }
+      const optionsScatter = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: 'Highest view rank',
+          ticks,
+        },
+        hAxis: {
+          title: '# of headlines',
+        },
+        chartArea: {
+          height: '70%'
+        },
+        dataOpacity: 0.25,
+      };
+      chartScatter.draw(dataScatter, optionsScatter);
+    }
   </script>
 <%- include('../partials/footer') %>

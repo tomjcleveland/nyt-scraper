@@ -9,7 +9,7 @@
       </div>
     <% } %>
   </div>
-  <div><strong><%= article.headlineCount %> headline<%= article.headlineCount > 1 ? 's' : '' %></strong> observed</div>
+  <div><strong><%= article.headlineCount %> headline<%= article.headlineCount !== 1 ? 's' : '' %></strong> observed</div>
 </div>
 <% const frontPageDays = Math.ceil(article.frontPagePeriods / (2 * 24)); %>
 <div class="mb-4">
@@ -22,7 +22,7 @@
       </div>
     <% } %>
   </div>
-  <div><strong><%= frontPageDays %> day<%= frontPageDays > 1 ? 's' : '' %></strong> on front page</div>
+  <div><strong><%= frontPageDays %> day<%= frontPageDays !== 1 ? 's' : '' %></strong> on front page</div>
 </div>
 <% if (article.viewRankMin && article.viewRankMin < 21) { %>
   <% const viewPct = Math.round(((21 - article.viewRankMin) / 20) * 100); %>

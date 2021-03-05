@@ -263,3 +263,76 @@ FROM latestpopdata AS lpd
   JOIN nyt.articles AS a ON a.uri=lpd.uri
   JOIN nyt.articlestats AS s ON s.uri=a.uri
 ```
+
+```sql
+WITH periodcounts AS (
+  SELECT
+    date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
+    uri,
+    1 AS present
+  FROM nyt.headlines
+  GROUP BY 1, 2, 3
+),
+articlecounts AS (
+  SELECT
+    a.uri,
+    SUM(COALESCE(pc.present, 0)) AS periods
+  FROM nyt.articles AS a
+    LEFT JOIN periodcounts AS pc ON a.uri=pc.uri
+  GROUP BY 1
+),
+viewcounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.viewrankings
+  GROUP BY 1
+),
+sharecounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.sharerankings
+  GROUP BY 1
+),
+emailcounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.emailrankings
+  GROUP BY 1
+),
+allcounts AS (
+  SELECT
+    vc.uri,
+    MIN(COALESCE(vc.rank, 21)) AS viewrank,
+    MIN(COALESCE(sc.rank, 21)) AS sharerank,
+    MIN(COALESCE(ec.rank, 21)) AS emailrank
+  FROM viewcounts AS vc
+    FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
+    FULL OUTER JOIN emailcounts AS ec ON ec.uri=sc.uri
+  GROUP BY 1
+)
+SELECT
+  ac.uri,
+  MIN(ac.periods) AS periods,
+  MIN(COALESCE(cc.viewrank, 21)) AS viewcountmin,
+  MIN(COALESCE(cc.sharerank, 21)) AS sharecountmin,
+  MIN(COALESCE(cc.emailrank, 21)) AS emailcountmin,
+  COUNT(DISTINCT h.headline) AS headlinecount
+FROM
+  articlecounts AS ac
+    LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
+    LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
+WHERE ac.uri='nyt://article/0e3ba8f8-01b3-5551-8b1b-0c205ea3cc51'
+GROUP BY 1;
+-- SELECT * FROM allcounts
+-- WHERE uri='nyt://article/0e3ba8f8-01b3-5551-8b1b-0c205ea3cc51';
+```
+
+```sql
+SELECT headlinecount, COUNT(*)
+FROM nyt.articlestats
+GROUP BY 1
+ORDER BY 1 ASC
+```

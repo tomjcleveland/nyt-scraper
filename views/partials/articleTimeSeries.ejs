@@ -1,6 +1,6 @@
 <% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
 <% if (headlinesSorted.length > 1) { %>
-  <ol>
+  <ol class="mb-0">
     <% headlinesSorted.forEach((headline, i) => { %>
       <li>
         <strong style="color: <%- COLORS.FULL[i % COLORS.FULL.length] %>;"><%= headline.headline %></strong> (<%= headline.pct %>%)
@@ -31,7 +31,6 @@
         // Create the data table.
         // Rows: Periods
         // Columns: [...Headlines, Rank]
-        var data = new google.visualization.DataTable();
         const valuesByDate = {};
         for (const point of timeSeries) {
           let currValues = valuesByDate[point.minute];
@@ -55,6 +54,16 @@
         }
         const rows = [];
         for (let key in valuesByDate) {
+          // Due to rounding errors, some periods might
+          // sum to > 100
+          const sum = valuesByDate[key].reduce((p, c) => p + c, 0);
+          if (sum > 100) {
+            for (let i = 0; i < valuesByDate[key].length; i++) {
+              if (valuesByDate[key][i] !== null && valuesByDate[key][i] > 0) {
+                valuesByDate[key][i] -= 1;
+              }
+            }
+          }
           const row = [new Date(key), ...valuesByDate[key]];
           rows.push(row);
         }

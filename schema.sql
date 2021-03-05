@@ -211,7 +211,7 @@ AS
   FROM
     articlecounts AS ac
       LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
-      LEFT JOIN allcounts AS cc ON cc.uri=h.uri
+      LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
   GROUP BY 1
 WITH DATA;
 

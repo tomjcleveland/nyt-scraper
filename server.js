@@ -12,6 +12,7 @@ const {
   fetchMostViewedArticles,
   fetchMostShownArticles,
   fetchStats,
+  fetchOverallStats,
 } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -185,11 +186,12 @@ const renderPage = (req, res, path, vars) => {
   });
 
   app.get("/stats", async (req, res) => {
-    const articles = await fetchStats(dbClient);
-    const sorted = articles.sort((a, b) => {
-      return (a.viewRankMin || 21) - (b.viewRankMin || 21);
+    const stats = await fetchOverallStats(dbClient);
+    renderPage(req, res, "pages/stats", {
+      stats,
+      title: "Statistics | NYT Headlines",
+      description: "Overall statistics for New York Times articles.",
     });
-    renderPage(req, res, "pages/stats", { articles: sorted });
   });
 
   app.get("/deleted", async (req, res) => {
