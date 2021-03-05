@@ -152,10 +152,28 @@ const fetchArticleTimeSeries = async (client, uri) => {
 };
 
 exports.fetchOverallStats = async (client) => {
-  const countQuery = `
-    SELECT MIN(created) AS firstcapture, COUNT(*)
-    FROM nyt.articles`;
-  const countRes = await client.query(countQuery);
+  const pieChartQuery = `
+    SELECT
+      COUNT(*),
+      SUM(CASE WHEN headlinecount > 0 THEN 1 ELSE 0 END) AS frontpage,
+      SUM(CASE WHEN
+        viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21
+        THEN 1 ELSE 0 END) AS ranked
+    FROM nyt.articlestats`;
+  const pieChartRes = await client.query(pieChartQuery);
+  const pieChartResult = pieChartRes.rows[0];
+  const totalCount = parseInt(pieChartResult.count, 10);
+  const totalFrontPageCount = parseInt(pieChartResult.frontpage, 10);
+  const overlapCount =
+    parseInt(pieChartResult.ranked, 10) +
+    parseInt(pieChartResult.frontpage, 10) -
+    pieChartResult.count;
+  const pieChart = [
+    ["Category", "# articles"],
+    ["Front page only", parseInt(pieChartResult.frontpage, 10) - overlapCount],
+    ["Ranked only", parseInt(pieChartResult.ranked, 10) - overlapCount],
+    ["Ranked & front page", overlapCount],
+  ];
 
   const headlineHistQuery = `SELECT headlinecount, COUNT(*)
     FROM nyt.articlestats
@@ -163,9 +181,12 @@ exports.fetchOverallStats = async (client) => {
     ORDER BY 1 ASC`;
   const headlineHistRes = await client.query(headlineHistQuery);
   const headlineHistogram = [
-    ["Headlines", "Count"],
+    ["Headlines", "% of total"],
     ...headlineHistRes.rows.slice(1).map((r) => {
-      return [parseInt(r.headlinecount, 10), parseInt(r.count, 10)];
+      return [
+        parseInt(r.headlinecount, 10),
+        Math.round((100 * parseInt(r.count, 10)) / totalFrontPageCount),
+      ];
     }),
   ];
 
@@ -178,9 +199,12 @@ exports.fetchOverallStats = async (client) => {
     ORDER BY 1 ASC`;
   const daysHistRes = await client.query(daysHistQuery);
   const daysHistogram = [
-    ["Days", "Count"],
+    ["Days", "% of total"],
     ...daysHistRes.rows.slice(1).map((r) => {
-      return [parseInt(r.days, 10), parseInt(r.count, 10)];
+      return [
+        parseInt(r.days, 10),
+        Math.round((100 * parseInt(r.count, 10)) / totalFrontPageCount),
+      ];
     }),
   ];
 
@@ -198,36 +222,13 @@ exports.fetchOverallStats = async (client) => {
       ]),
   ];
 
-  const pieChartQuery = `
-    SELECT
-      COUNT(*),
-      SUM(CASE WHEN headlinecount > 0 THEN 1 ELSE 0 END) AS frontpage,
-      SUM(CASE WHEN
-        viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21
-        THEN 1 ELSE 0 END) AS ranked
-    FROM nyt.articlestats`;
-  const pieChartRes = await client.query(pieChartQuery);
-  const pieChartResult = pieChartRes.rows[0];
-  const overlapCount =
-    parseInt(pieChartResult.ranked, 10) +
-    parseInt(pieChartResult.frontpage, 10) -
-    pieChartResult.count;
-
   return {
     headlineHistogram,
     daysHistogram,
     scatter,
-    firstCapture: countRes.rows[0].firstcapture,
-    articleCount: parseInt(countRes.rows[0].count, 10),
-    pieChart: [
-      ["Category", "# articles"],
-      [
-        "Front page only",
-        parseInt(pieChartResult.frontpage, 10) - overlapCount,
-      ],
-      ["Ranked only", parseInt(pieChartResult.ranked, 10) - overlapCount],
-      ["Ranked & front page", overlapCount],
-    ],
+    firstCapture: new Date(2021, 1, 13),
+    articleCount: parseInt(pieChartResult.count, 10),
+    pieChart,
   };
 };
 

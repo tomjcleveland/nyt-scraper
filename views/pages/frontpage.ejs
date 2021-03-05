@@ -1,6 +1,6 @@
 <%- include('../partials/header') %>
     <h2 style="margin-bottom: 0;">Front page</h2>
-    <p><%= articles.length %> headlines from current the NYT homepage.</p>
+    <p><%= articles.length %> headlines from the current the NYT homepage.</p>
     <% articles.forEach((article) => { %>
       <%- include('../partials/articleCard', { article }) %>
     <% }); %>

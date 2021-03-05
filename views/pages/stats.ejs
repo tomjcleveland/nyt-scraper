@@ -6,7 +6,7 @@
   <p>The articles in our database.</p>
   <div class="row">
     <div class="col-md-6">
-      <div class="aspect aspect-3-2">
+      <div class="aspect aspect-3-2 shadow-sm">
         <div class="aspect-contents" id="piechart"></div>
       </div>
     </div>
@@ -14,19 +14,19 @@
 
   <h3 class="mt-4">Headlines per article</h3>
   <p>The distribution of headlines per article. (Only includes articles that have appeared on the front page.)</p>
-  <div class="aspect aspect-16-9">
+  <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="headline-histogram"></div>
   </div>
 
   <h3 class="mt-4">Days on front page</h3>
   <p>Visualizing how long articles spend on front page. (Only includes articles that have appeared on the front page.)</p>
-  <div class="aspect aspect-16-9">
+  <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="days-histogram"></div>
   </div>
 
   <h3 class="mt-4">Headlines vs. views</h3>
   <p>Plotting the number of headlines for an article against its best ranking on the "most viewed" list.</p>
-  <div class="aspect aspect-16-9">
+  <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="scatter"></div>
   </div>
   <script>
@@ -52,7 +52,8 @@
         legend: { position: "none" },
         colors: window.COLORS.FULL,
         vAxis: {
-          title: '# of articles',
+          title: '% of articles',
+          format: "#'%'"
         },
         hAxis: {
           title: '# of headlines',
@@ -69,10 +70,12 @@
         legend: { position: "none" },
         colors: window.COLORS.FULL,
         vAxis: {
-          title: '# of articles',
+          title: '% of articles',
+          format: "#'%'"
         },
         hAxis: {
           title: 'Days on front page',
+          ticks: daysHistogramData.slice(1).map(d => d[0])
         },
         chartArea: {
           height: '70%'

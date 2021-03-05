@@ -48,7 +48,7 @@
             currValues[headlines.indexOf(point.headline)] = Math.round(100 * (point.count / point.total));
           }
           if (hasRanks && point.rank) {
-            currValues[hasHeadlines ? headlines.length : 0] = Number.isNaN(parseInt(point.rank, 10)) ? null : -1 * parseInt(point.rank, 10);
+            currValues[hasHeadlines ? headlines.length : 0] = Number.isNaN(parseInt(point.rank, 10)) ? null : {v: -1 * parseInt(point.rank, 10), f: point.rank};
           }
           valuesByDate[point.minute] = currValues;
         }
