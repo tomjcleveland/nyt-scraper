@@ -314,6 +314,7 @@ exports.fetchMostShownArticles = async (client, allTime) => {
       a.weburl,
       a.abstract,
       a.imageurl,
+      a.published,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
       tt.viewcountmin,
