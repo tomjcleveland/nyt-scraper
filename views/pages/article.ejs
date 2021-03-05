@@ -11,23 +11,39 @@
       <% } %>
       <div class="card-body pt-0">
         <p class="mt-0"><%= article.abstract %></p>
-        <p><a href="<%= article.url %>">Read full article</a></p>
+        <p class="mb-0"><a href="<%= article.url %>">Read full article</a></p>
+      </div>
+    </div>
+    <div class="col mt-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="card-text mb-4">Headlines and popularity</h3>
+          <%- include('../partials/articleTimeSeries', { article }) %>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-md-4 pt-4 px-4">
-    <%- include('../partials/articleStats', { article, extended: true }) %>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title mb-4">At a glance</h4>
+        <%- include('../partials/articleStats', { article, extended: true }) %>
+      </div>
+    </div>
+    <div class="card shadow-sm  mt-4">
+      <div class="card-body">
+        <h4 class="card-title mb-0">Headlines</h4>
+      </div>
+      <ul class="list-group list-group-flush">
+        <% article.headlines.forEach((headline) => { %>
+          <li class="list-group-item"><%= headline.headline %></li>
+        <% }) %>
+      </ul>
+    </div>
   </div>
 </div>
 <div class="row">
-  <div class="col-md-8">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-text">Headlines and popularity</h3>
-        <%- include('../partials/articleTimeSeries', { article }) %>
-      </div>
-    </div>
-  </div>
+  
 </div>
 
 <%- include('../partials/footer') %>

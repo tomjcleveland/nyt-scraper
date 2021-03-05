@@ -1,0 +1,9 @@
+<% if (rank && rank < 21) { %>
+  <div class="me-4">
+    <% for (let i = 0; i < 10; i++) { %>
+      <div class="rank-bar <%= i + 1 === Math.ceil(rank / 2) ? 'bg-primary rank-bar-selected' : '' %>"></div>
+    <% } %>
+    <p class="mt-2 mb-0"><strong>#<%= rank %> <%= adjective %></strong></p>
+    <p class="mt-0">at its peak</p>
+  </div>
+<% } %>
