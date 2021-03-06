@@ -2,7 +2,7 @@
   <h2>NYT Statistics</h2>
   <p>High level stats for <strong><%= stats.articleCount.toLocaleString() %> articles</strong> captured from the New York Times since <strong><%= dayjs(stats.firstCapture).format('MMMM D, YYYY') %></strong>.</p>
   
-  <h3>Overview</h3>
+  <h3 id="overview">Overview</h3>
   <p>The articles in our database.</p>
   <div class="row">
     <div class="col-md-6">
@@ -12,28 +12,35 @@
     </div>
   </div>
 
-  <h3 class="mt-4">Headlines per article</h3>
+  <h3 id="headlines-per-article" class="mt-4">Headlines per article</h3>
   <p>The distribution of headlines per article. (Only includes articles that have appeared on the front page.)</p>
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="headline-histogram"></div>
   </div>
 
-  <h3 class="mt-4">Days on front page</h3>
+  <h3 id="days-front-page" class="mt-4">Days on front page</h3>
   <p>Visualizing how long articles spend on front page. (Only includes articles that have appeared on the front page.)</p>
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="days-histogram"></div>
   </div>
 
-  <h3 class="mt-4">Headlines vs. views</h3>
+  <h3 id="headlines-views" class="mt-4">Headlines vs. views</h3>
   <p>Plotting the number of headlines for an article against its best ranking on the "most viewed" list.</p>
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="scatter"></div>
+  </div>
+
+  <h3 id="ranked-articles" class="mt-4">Ranked articles</h3>
+  <p>The percentage of articles that end up on the most-viewed, most-shared, or most-emailed lists.</p>
+  <div class="aspect aspect-16-9 shadow-sm">
+    <div class="aspect-contents" id="ranked"></div>
   </div>
   <script>
     const pieChartData = JSON.parse('<%- JSON.stringify(stats.pieChart) %>');
     const headlineHistogramData = JSON.parse('<%- JSON.stringify(stats.headlineHistogram) %>');
     const daysHistogramData = JSON.parse('<%- JSON.stringify(stats.daysHistogram) %>');
     const scatterData = JSON.parse('<%- JSON.stringify(stats.scatter) %>');
+    const abEffectsData = JSON.parse('<%- JSON.stringify(stats.abEffects) %>');
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
       const dataPieChart = new google.visualization.arrayToDataTable(pieChartData);
@@ -105,6 +112,22 @@
         dataOpacity: 0.25,
       };
       chartScatter.draw(dataScatter, optionsScatter);
+
+      const dataAbEffects = new google.visualization.arrayToDataTable(abEffectsData);
+      const chartAbEffects = new google.visualization.ColumnChart(document.getElementById('ranked'));
+      const optionsAbEffects = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: '% of articles that rank',
+          format: "#'%'",
+          minValue: 0,
+        },
+        chartArea: {
+          height: '70%'
+        }
+      };
+      chartAbEffects.draw(dataAbEffects, optionsAbEffects);
     }
   </script>
 <%- include('../partials/footer') %>

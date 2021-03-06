@@ -175,6 +175,21 @@ exports.fetchOverallStats = async (client) => {
     ["Ranked & front page", overlapCount],
   ];
 
+  const abEffectsQuery = `
+    SELECT
+      SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ie,
+      SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ce,
+      SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS cn,
+      SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS "in"
+    FROM nyt.articlestats`;
+  const abEffectsRes = await client.query(abEffectsQuery);
+  const abData = abEffectsRes.rows[0];
+  const abEffects = [
+    ["Group", "% that rank"],
+    ["A/B Tested", Math.round((100 * abData.ie) / abData.in)],
+    ["One headline", Math.round((100 * abData.ce) / abData.cn)],
+  ];
+
   const headlineHistQuery = `SELECT headlinecount, COUNT(*)
     FROM nyt.articlestats
     GROUP BY 1
@@ -229,6 +244,7 @@ exports.fetchOverallStats = async (client) => {
     firstCapture: new Date(2021, 1, 13),
     articleCount: parseInt(pieChartResult.count, 10),
     pieChart,
+    abEffects,
   };
 };
 

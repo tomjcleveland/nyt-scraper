@@ -214,179 +214,66 @@ token: 1wbJDKl/3uvaWMkO9w4bEU83RhTjEMkpOntvn1fJwmdbuF8wFXWfM5vDvs0hA8wgd8jOoea6b
 SELECT h.uri, h.headline FROM nyt.headlines AS h LEFT JOIN nyt.articles AS a ON h.uri=a.uri WHERE a.uri IS NULL GROUP BY 1, 2
 ```
 
-## Time on front page
+## Capitalization differences
 
 ```sql
-WITH periodcounts AS (
-  SELECT
-    date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
-    uri,
-    headline,
-    1 AS present
-    FROM nyt.headlines
-    GROUP BY 1, 2, 3, 4
-)
-SELECT
-  uri,
-  headline,
-  SUM(present) AS periods
-FROM periodcounts
-GROUP BY 1, 2
-ORDER BY periods DESC
-```
-
-```sql
-WITH latestpopminute AS (
-  SELECT date_trunc('minute', created) AS minute
-  FROM nyt.viewrankings
-  ORDER BY 1 DESC
-  LIMIT 1
-),
-latestpopdata AS (
-  SELECT uri, rank
-  FROM nyt.viewrankings AS pr
-  JOIN latestpopminute AS lpm
-    ON date_trunc('minute', pr.created)=lpm.minute
-)
-SELECT
-  lpd.rank,
-  a.uri,
-  a.imageurl,
-  a.abstract,
-  a.headline AS canonicalheadline,
-  s.viewcountmin,
-  s.sharecountmin,
-  s.emailcountmin,
-  s.headlinecount,
-  s.periods
-FROM latestpopdata AS lpd
-  JOIN nyt.articles AS a ON a.uri=lpd.uri
-  JOIN nyt.articlestats AS s ON s.uri=a.uri
-```
-
-```sql
-WITH periodcounts AS (
-  SELECT
-    date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS period,
-    uri,
-    1 AS present
+WITH heads AS (
+  SELECT uri, headline
   FROM nyt.headlines
-  GROUP BY 1, 2, 3
-),
-articlecounts AS (
-  SELECT
-    a.uri,
-    SUM(COALESCE(pc.present, 0)) AS periods
-  FROM nyt.articles AS a
-    LEFT JOIN periodcounts AS pc ON a.uri=pc.uri
-  GROUP BY 1
-),
-viewcounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.viewrankings
-  GROUP BY 1
-),
-sharecounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.sharerankings
-  GROUP BY 1
-),
-emailcounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.emailrankings
-  GROUP BY 1
-),
-allcounts AS (
-  SELECT
-    vc.uri,
-    MIN(COALESCE(vc.rank, 21)) AS viewrank,
-    MIN(COALESCE(sc.rank, 21)) AS sharerank,
-    MIN(COALESCE(ec.rank, 21)) AS emailrank
-  FROM viewcounts AS vc
-    FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
-    FULL OUTER JOIN emailcounts AS ec ON ec.uri=sc.uri
-  GROUP BY 1
+  GROUP BY 1, 2
 )
 SELECT
-  ac.uri,
-  MIN(ac.periods) AS periods,
-  MIN(COALESCE(cc.viewrank, 21)) AS viewcountmin,
-  MIN(COALESCE(cc.sharerank, 21)) AS sharecountmin,
-  MIN(COALESCE(cc.emailrank, 21)) AS emailcountmin,
-  COUNT(DISTINCT h.headline) AS headlinecount
-FROM
-  articlecounts AS ac
-    LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
-    LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
-WHERE ac.uri='nyt://article/0e3ba8f8-01b3-5551-8b1b-0c205ea3cc51'
-GROUP BY 1;
--- SELECT * FROM allcounts
--- WHERE uri='nyt://article/0e3ba8f8-01b3-5551-8b1b-0c205ea3cc51';
+  DISTINCT h1.uri
+FROM heads AS h1
+  JOIN heads AS h2 ON LOWER(h1.headline)=LOWER(h2.headline)
+WHERE h1.headline != h2.headline
 ```
 
+## Histogram: publication time
+
 ```sql
-SELECT headlinecount, COUNT(*)
-FROM nyt.articlestats
+SELECT DATE_PART('hour', published), COUNT(*)
+FROM nyt.articles
 GROUP BY 1
 ORDER BY 1 ASC
 ```
 
-```sql
-SELECT
-  headlinecount AS days,
-  COUNT(*)
-FROM nyt.articlestats
-GROUP BY 1
-ORDER BY 1 ASC
-```
+## Histogram: earliest headline time
 
 ```sql
-SELECT
-  CEILING(COALESCE(periods::decimal, 0.0) / 48) AS days,
-  COUNT(*)
-FROM nyt.articlestats
-GROUP BY 1
-ORDER BY 1 ASC
-```
-
-```sql
-viewcounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.viewrankings
-  GROUP BY 1
-),
-sharecounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.sharerankings
-  GROUP BY 1
-),
-emailcounts AS (
-  SELECT
-    uri,
-    MIN(COALESCE(rank, 21)) AS rank
-  FROM nyt.emailrankings
-  GROUP BY 1
-),
-allcounts AS (
-  SELECT
-    COALESCE(vc.uri, sc.uri, ec.uri) AS uri,
-    MIN(COALESCE(vc.rank, 21)) AS viewrank,
-    MIN(COALESCE(sc.rank, 21)) AS sharerank,
-    MIN(COALESCE(ec.rank, 21)) AS emailrank
-  FROM viewcounts AS vc
-    FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
-    FULL OUTER JOIN emailcounts AS ec ON vc.uri=ec.uri
+WITH earliest AS (
+  SELECT uri, MIN(created) AS created
+  FROM nyt.headlines
   GROUP BY 1
 )
-SELECT * FROM allcounts WHERE uri='nyt://article/866f7eb5-03ac-5dbd-84f9-50e977051895';
+SELECT DATE_PART('hour', created), COUNT(*)
+FROM earliest
+GROUP BY 1
+ORDER BY 1 ASC
+```
+
+## Articles on front page for shortest time
+
+```sql
+SELECT
+  a.uri,
+  a.weburl,
+  a.headline,
+  st.periods
+FROM nyt.articlestats AS st
+  JOIN nyt.articles AS a ON st.uri=a.uri
+WHERE st.periods != 0
+ORDER BY st.periods ASC
+LIMIT 10
+```
+
+## A/B testing vs. popularity
+
+```sql
+SELECT
+  SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ie,
+  SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ce,
+  SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS cn,
+  SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS 'in'
+FROM nyt.articlestats
 ```
