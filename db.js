@@ -192,7 +192,7 @@ exports.fetchOverallStats = async (client) => {
 
   const daysHistQuery = `
     SELECT
-      CEILING(periods / 48) AS days,
+      CEILING(COALESCE(periods::decimal, 0.0) / 2) AS days,
       COUNT(*)
     FROM nyt.articlestats
     GROUP BY 1
@@ -200,10 +200,10 @@ exports.fetchOverallStats = async (client) => {
   const daysHistRes = await client.query(daysHistQuery);
   const daysHistogram = [
     ["Days", "% of total"],
-    ...daysHistRes.rows.slice(1).map((r) => {
+    ...daysHistRes.rows.slice(1, 48).map((r) => {
       return [
         parseInt(r.days, 10),
-        Math.round((100 * parseInt(r.count, 10)) / totalFrontPageCount),
+        (100 * parseInt(r.count, 10)) / totalFrontPageCount,
       ];
     }),
   ];

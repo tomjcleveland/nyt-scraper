@@ -336,3 +336,57 @@ FROM nyt.articlestats
 GROUP BY 1
 ORDER BY 1 ASC
 ```
+
+```sql
+SELECT
+  headlinecount AS days,
+  COUNT(*)
+FROM nyt.articlestats
+GROUP BY 1
+ORDER BY 1 ASC
+```
+
+```sql
+SELECT
+  CEILING(COALESCE(periods::decimal, 0.0) / 48) AS days,
+  COUNT(*)
+FROM nyt.articlestats
+GROUP BY 1
+ORDER BY 1 ASC
+```
+
+```sql
+viewcounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.viewrankings
+  GROUP BY 1
+),
+sharecounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.sharerankings
+  GROUP BY 1
+),
+emailcounts AS (
+  SELECT
+    uri,
+    MIN(COALESCE(rank, 21)) AS rank
+  FROM nyt.emailrankings
+  GROUP BY 1
+),
+allcounts AS (
+  SELECT
+    COALESCE(vc.uri, sc.uri, ec.uri) AS uri,
+    MIN(COALESCE(vc.rank, 21)) AS viewrank,
+    MIN(COALESCE(sc.rank, 21)) AS sharerank,
+    MIN(COALESCE(ec.rank, 21)) AS emailrank
+  FROM viewcounts AS vc
+    FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
+    FULL OUTER JOIN emailcounts AS ec ON vc.uri=ec.uri
+  GROUP BY 1
+)
+SELECT * FROM allcounts WHERE uri='nyt://article/866f7eb5-03ac-5dbd-84f9-50e977051895';
+```

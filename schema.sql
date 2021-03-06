@@ -192,13 +192,13 @@ AS
   ),
   allcounts AS (
     SELECT
-      vc.uri,
+      COALESCE(vc.uri, sc.uri, ec.uri) AS uri,
       MIN(COALESCE(vc.rank, 21)) AS viewrank,
       MIN(COALESCE(sc.rank, 21)) AS sharerank,
       MIN(COALESCE(ec.rank, 21)) AS emailrank
     FROM viewcounts AS vc
       FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
-      FULL OUTER JOIN emailcounts AS ec ON ec.uri=sc.uri
+      FULL OUTER JOIN emailcounts AS ec ON vc.uri=ec.uri
     GROUP BY 1
   )
   SELECT
