@@ -18,6 +18,9 @@
     <div class="col-md-4">
       <div class="card-body h-100 d-flex flex-column justify-content-between">
         <div>
+          <% if (article.section) { %>
+            <div class="mb-2"><span style="background-color: <%- stringToColor(article.section) %>;" class="badge"><%= article.section.toUpperCase() %></span></div>
+          <% } %>
           <p class="card-text mb-2"><small><%= dayjs(article.published).format('MMMM D, YYYY') %></small></p>
           <h5 class="card-title"><%= article.canonicalheadline %></h5>
           <p class="card-text"><%= article.abstract %></p>

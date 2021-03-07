@@ -274,6 +274,19 @@ SELECT
   SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ie,
   SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ce,
   SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS cn,
-  SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS 'in'
+  SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS "in"
 FROM nyt.articlestats
+```
+
+## Front page time by section
+
+```sql
+SELECT
+  SPLIT_PART(a.weburl, '/', 7) AS section,
+  SUM(st.periods)
+FROM nyt.articles AS a
+  JOIN nyt.articlestats AS st ON a.uri=st.uri
+WHERE st.headlinecount > 0
+GROUP BY 1
+ORDER BY  2 DESC
 ```

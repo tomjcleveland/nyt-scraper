@@ -35,15 +35,47 @@
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="ranked"></div>
   </div>
+
+  
+  <div class="row">
+    <div class="col-md-6">
+      <h3 id="front-page-by-section" class="mt-4">Front page articles, by section</h3>
+      <p>The front page time allotted to each section.</p>
+      <div class="aspect aspect-3-2 shadow-sm">
+        <div class="aspect-contents" id="front-page-by-section-chart"></div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <h3 id="front-page-by-category" class="mt-4">Front page articles, by category</h3>
+      <p>The front page time allotted to each category.</p>
+      <div class="aspect aspect-3-2 shadow-sm">
+        <div class="aspect-contents" id="front-page-by-category-chart"></div>
+      </div>
+      <div class="p-2 mt-2">
+        <p>
+          <strong>News:</strong>
+          <%= stats.newsCategories.news.join(', ') %>
+        </p>
+        <p>
+          <strong>Fluff:</strong>
+          <%= stats.newsCategories.fluff.join(', ') %>
+        </p>
+      </div>
+    </div>
+  </div>
   <script>
-    const pieChartData = JSON.parse('<%- JSON.stringify(stats.pieChart) %>');
-    const headlineHistogramData = JSON.parse('<%- JSON.stringify(stats.headlineHistogram) %>');
-    const daysHistogramData = JSON.parse('<%- JSON.stringify(stats.daysHistogram) %>');
-    const scatterData = JSON.parse('<%- JSON.stringify(stats.scatter) %>');
-    const abEffectsData = JSON.parse('<%- JSON.stringify(stats.abEffects) %>');
+    const {
+      pieChart,
+      headlineHistogram,
+      daysHistogram,
+      scatter,
+      abEffects,
+      frontPageBySection,
+      frontPageByCategory
+    } = JSON.parse('<%- JSON.stringify(stats) %>');
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
-      const dataPieChart = new google.visualization.arrayToDataTable(pieChartData);
+      const dataPieChart = new google.visualization.arrayToDataTable(pieChart);
       const chartPieChart = new google.visualization.PieChart(document.getElementById('piechart'));
       const optionsPieChart = {
         chartArea: {
@@ -53,7 +85,7 @@
       };
       chartPieChart.draw(dataPieChart, optionsPieChart);
       
-      const dataHeadlineHist = new google.visualization.arrayToDataTable(headlineHistogramData);
+      const dataHeadlineHist = new google.visualization.arrayToDataTable(headlineHistogram);
       const chartHeadlineHist = new google.visualization.ColumnChart(document.getElementById('headline-histogram'));
       const optionsHeadlineHist = {
         legend: { position: "none" },
@@ -71,7 +103,7 @@
       };
       chartHeadlineHist.draw(dataHeadlineHist, optionsHeadlineHist);
 
-      const dataDaysHist = new google.visualization.arrayToDataTable(daysHistogramData);
+      const dataDaysHist = new google.visualization.arrayToDataTable(daysHistogram);
       const chartDaysHist = new google.visualization.ColumnChart(document.getElementById('days-histogram'));
       const optionsDaysHist = {
         legend: { position: "none" },
@@ -82,7 +114,7 @@
         },
         hAxis: {
           title: 'Hours on front page',
-          ticks: daysHistogramData.slice(1).map(d => d[0])
+          ticks: daysHistogram.slice(1).map(d => d[0])
         },
         chartArea: {
           height: '70%'
@@ -90,7 +122,7 @@
       };
       chartDaysHist.draw(dataDaysHist, optionsDaysHist);
 
-      const dataScatter = new google.visualization.arrayToDataTable(scatterData);
+      const dataScatter = new google.visualization.arrayToDataTable(scatter);
       const chartScatter = new google.visualization.ScatterChart(document.getElementById('scatter'));
       let ticks = [];
       for (let i = 1; i <= 20; i++) {
@@ -113,7 +145,7 @@
       };
       chartScatter.draw(dataScatter, optionsScatter);
 
-      const dataAbEffects = new google.visualization.arrayToDataTable(abEffectsData);
+      const dataAbEffects = new google.visualization.arrayToDataTable(abEffects);
       const chartAbEffects = new google.visualization.ColumnChart(document.getElementById('ranked'));
       const optionsAbEffects = {
         legend: { position: "none" },
@@ -128,6 +160,26 @@
         }
       };
       chartAbEffects.draw(dataAbEffects, optionsAbEffects);
+
+      const dataFrontPageBySection = new google.visualization.arrayToDataTable(frontPageBySection);
+      const chartFrontPageBySection = new google.visualization.PieChart(document.getElementById('front-page-by-section-chart'));
+      const optionsFrontPageBySection = {
+        chartArea: {
+          height: '80%',
+          width: '100%'
+        }
+      };
+      chartFrontPageBySection.draw(dataFrontPageBySection, optionsFrontPageBySection);
+
+      const dataFrontPageByCategory = new google.visualization.arrayToDataTable(frontPageByCategory);
+      const chartFrontPageByCategory = new google.visualization.PieChart(document.getElementById('front-page-by-category-chart'));
+      const optionsFrontPageByCategory = {
+        chartArea: {
+          height: '80%',
+          width: '100%'
+        }
+      };
+      chartFrontPageByCategory.draw(dataFrontPageByCategory, optionsFrontPageByCategory);
     }
   </script>
 <%- include('../partials/footer') %>

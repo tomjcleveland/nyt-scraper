@@ -3,6 +3,20 @@ const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
 
+const NEWS_CATEGORIES = [
+  "us",
+  "world",
+  "business",
+  "technology",
+  "climate",
+  "science",
+  "nyregion",
+  "briefing",
+  "upshot",
+  "health",
+  "education",
+];
+
 exports.newDBClient = async () => {
   const dbClient = new Client({
     user: "nyt_app",
@@ -175,6 +189,38 @@ exports.fetchOverallStats = async (client) => {
     ["Ranked & front page", overlapCount],
   ];
 
+  const frontPageBySectionQuery = `
+    SELECT
+      SPLIT_PART(a.weburl, '/', 7) AS section,
+      SUM(st.periods) AS totalperiods
+    FROM nyt.articles AS a
+      JOIN nyt.articlestats AS st ON a.uri=st.uri
+    WHERE st.headlinecount > 0
+    GROUP BY 1
+    ORDER BY  2 DESC`;
+  const frontPageBySectionRes = await client.query(frontPageBySectionQuery);
+  const frontPageBySection = [
+    ["Section", "Front page time"],
+    ...frontPageBySectionRes.rows.map((r) => [
+      r.section,
+      parseInt(r.totalperiods, 10),
+    ]),
+  ];
+  let categoryNewsCount = 0;
+  let categoryFluffCount = 0;
+  for (let row of frontPageBySectionRes.rows) {
+    if (NEWS_CATEGORIES.includes(row.section)) {
+      categoryNewsCount += parseInt(row.totalperiods, 10);
+    } else {
+      categoryFluffCount += parseInt(row.totalperiods, 10);
+    }
+  }
+  const frontPageByCategory = [
+    ["Category", "Front page time"],
+    ["News", categoryNewsCount],
+    ["Fluff", categoryFluffCount],
+  ];
+
   const abEffectsQuery = `
     SELECT
       SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ie,
@@ -245,6 +291,14 @@ exports.fetchOverallStats = async (client) => {
     articleCount: parseInt(pieChartResult.count, 10),
     pieChart,
     abEffects,
+    frontPageBySection,
+    frontPageByCategory,
+    newsCategories: {
+      news: NEWS_CATEGORIES,
+      fluff: frontPageBySectionRes.rows
+        .filter((r) => !NEWS_CATEGORIES.includes(r.section))
+        .map((r) => r.section),
+    },
   };
 };
 
@@ -405,7 +459,7 @@ exports.fetchMostShownArticles = async (client, allTime) => {
         JOIN nyt.articles AS a ON a.uri=ast.uri
       ${intervalClause}
       ORDER BY periods DESC
-      LIMIT 10
+      LIMIT 20
     )
     SELECT
       a.uri,
@@ -466,6 +520,7 @@ exports.fetchRecentPopularityData = async (client, type) => {
       lpd.rank,
       a.uri,
       a.imageurl,
+      a.weburl,
       a.abstract,
       a.published,
       a.headline AS canonicalheadline,
@@ -533,6 +588,7 @@ const articlesFromHeadlines = async (
 };
 
 const articleFromStats = (row) => {
+  const url = row.weburl || row.url;
   return {
     ...row,
     id: idFromUri(row.uri),
@@ -542,6 +598,7 @@ const articleFromStats = (row) => {
     shareRankMin: parseInt(row.sharecountmin, 10),
     emailRankMin: parseInt(row.emailcountmin, 10),
     imageUrl: row.imageurl || row.imageUrl,
+    section: url ? url.split("/")[6] : null,
   };
 };
 
