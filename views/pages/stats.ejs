@@ -2,15 +2,16 @@
   <h2>NYT Statistics</h2>
   <p>High level stats for <strong><%= stats.articleCount.toLocaleString() %> articles</strong> captured from the New York Times since <strong><%= dayjs(stats.firstCapture).format('MMMM D, YYYY') %></strong>.</p>
   
-  <h3 id="overview">Overview</h3>
+  <!-- Eh this is boring -->
+  <!-- <h3 id="overview">Overview</h3>
   <p>The articles in our database.</p>
-  <div class="row">
+    <div class="row">
     <div class="col-md-6">
       <div class="aspect aspect-3-2 shadow-sm">
         <div class="aspect-contents" id="piechart"></div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <h3 id="headlines-per-article" class="mt-4">Headlines per article</h3>
   <p>The distribution of headlines per article. (Only includes articles that have appeared on the front page.)</p>
@@ -19,16 +20,17 @@
   </div>
 
   <h3 id="days-front-page" class="mt-4">Days on front page</h3>
-  <p>Visualizing how long articles spend on front page. (Only includes articles that have appeared on the front page.)</p>
+  <p>Visualizing how long articles spend on front page. (Only includes articles that have appeared on the front page. Truncated at 48 hours for readability.)</p>
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="days-histogram"></div>
   </div>
 
-  <h3 id="headlines-views" class="mt-4">Headlines vs. views</h3>
+  <!-- Also boring -->
+  <!-- <h3 id="headlines-views" class="mt-4">Headlines vs. views</h3>
   <p>Plotting the number of headlines for an article against its best ranking on the "most viewed" list.</p>
   <div class="aspect aspect-16-9 shadow-sm">
     <div class="aspect-contents" id="scatter"></div>
-  </div>
+  </div> -->
 
   <h3 id="ranked-articles" class="mt-4">Ranked articles</h3>
   <p>The percentage of articles that end up on the most-viewed, most-shared, or most-emailed lists.</p>
@@ -75,15 +77,16 @@
     } = JSON.parse('<%- JSON.stringify(stats) %>');
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
-      const dataPieChart = new google.visualization.arrayToDataTable(pieChart);
-      const chartPieChart = new google.visualization.PieChart(document.getElementById('piechart'));
-      const optionsPieChart = {
-        chartArea: {
-          height: '80%',
-          width: '100%'
-        }
-      };
-      chartPieChart.draw(dataPieChart, optionsPieChart);
+      // Boring—removing for now
+      // const dataPieChart = new google.visualization.arrayToDataTable(pieChart);
+      // const chartPieChart = new google.visualization.PieChart(document.getElementById('piechart'));
+      // const optionsPieChart = {
+      //   chartArea: {
+      //     height: '80%',
+      //     width: '100%'
+      //   }
+      // };
+      // chartPieChart.draw(dataPieChart, optionsPieChart);
       
       const dataHeadlineHist = new google.visualization.arrayToDataTable(headlineHistogram);
       const chartHeadlineHist = new google.visualization.ColumnChart(document.getElementById('headline-histogram'));
@@ -122,28 +125,29 @@
       };
       chartDaysHist.draw(dataDaysHist, optionsDaysHist);
 
-      const dataScatter = new google.visualization.arrayToDataTable(scatter);
-      const chartScatter = new google.visualization.ScatterChart(document.getElementById('scatter'));
-      let ticks = [];
-      for (let i = 1; i <= 20; i++) {
-        ticks.push({v: -1 * i, f: i.toString()});
-      }
-      const optionsScatter = {
-        legend: { position: "none" },
-        colors: window.COLORS.FULL,
-        vAxis: {
-          title: 'Highest view rank',
-          ticks,
-        },
-        hAxis: {
-          title: '# of headlines',
-        },
-        chartArea: {
-          height: '70%'
-        },
-        dataOpacity: 0.25,
-      };
-      chartScatter.draw(dataScatter, optionsScatter);
+      // Boring.
+      // const dataScatter = new google.visualization.arrayToDataTable(scatter);
+      // const chartScatter = new google.visualization.ScatterChart(document.getElementById('scatter'));
+      // let ticks = [];
+      // for (let i = 1; i <= 20; i++) {
+      //   ticks.push({v: -1 * i, f: i.toString()});
+      // }
+      // const optionsScatter = {
+      //   legend: { position: "none" },
+      //   colors: window.COLORS.FULL,
+      //   vAxis: {
+      //     title: 'Highest view rank',
+      //     ticks,
+      //   },
+      //   hAxis: {
+      //     title: '# of headlines',
+      //   },
+      //   chartArea: {
+      //     height: '70%'
+      //   },
+      //   dataOpacity: 0.25,
+      // };
+      // chartScatter.draw(dataScatter, optionsScatter);
 
       const dataAbEffects = new google.visualization.arrayToDataTable(abEffects);
       const chartAbEffects = new google.visualization.ColumnChart(document.getElementById('ranked'));
