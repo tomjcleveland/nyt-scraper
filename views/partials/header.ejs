@@ -84,7 +84,7 @@
       window.COLORS = JSON.parse('<%- JSON.stringify(COLORS) %>');
     </script>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-xl navbar-light bg-light">
       <div class="container">
         <a class="navbar-brand" href="/"><strong>NYT Headlines</strong></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item dropdown">
+            <li class="me-2 nav-item dropdown">
               <a class="nav-link dropdown-toggle<%= path.startsWith('/most') || path === '/' ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Popular
               </a>
@@ -102,19 +102,19 @@
                 <li><a class="dropdown-item<%= path === '/mostemailed' ? ' active' : '' %>" href="/mostemailed">Most emailed</a></li>
               </ul>
             </li>
-            <li class="nav-item">
+            <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/frontpage' ? ' active' : '' %>" aria-current="page" href="/frontpage">Front page</a>
             </li>
-            <li class="nav-item">
+            <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/mostpromoted' ? ' active' : '' %>" aria-current="page" href="/mostpromoted">Most promoted</a>
             </li>
-            <li class="nav-item">
+            <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/mostheadlines' ? ' active' : '' %>" aria-current="page" href="/mostheadlines">Most headlines</a>
             </li>
-            <li class="nav-item">
+            <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/stats' ? ' active' : '' %>" aria-current="page" href="/stats">Stats</a>
             </li>
-            <li class="nav-item">
+            <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/about' ? ' active' : '' %>" href="/about">About</a>
             </li>
           </ul>
