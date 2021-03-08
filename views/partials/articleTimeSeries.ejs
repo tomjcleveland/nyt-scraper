@@ -1,7 +1,6 @@
-<% const headlinesSorted = article.headlines.sort((a, b) => b.count - a.count); %>
-<% if (headlinesSorted.length > 1) { %>
+<% if (article.headlines.length > 1) { %>
   <ol class="mb-0">
-    <% headlinesSorted.forEach((headline, i) => { %>
+    <% article.headlines.forEach((headline, i) => { %>
       <li>
         <strong style="color: <%- COLORS.FULL[i % COLORS.FULL.length] %>;"><%= headline.headline %></strong> (<%= headline.pct %>%)
       </li>

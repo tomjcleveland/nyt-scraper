@@ -71,6 +71,7 @@ exports.fetchArticleById = async (client, id) => {
       a.imageurl,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      MIN(h.retrieved) AS firstseen,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved,
       MIN(ast.periods) AS periods,
@@ -129,7 +130,8 @@ const fetchArticleTimeSeries = async (client, uri) => {
     ),
     totalperminute AS (
       SELECT
-      date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS minute,
+        date_trunc('hour', retrieved) + date_part('minute', retrieved)::int / 30 * interval '30 minutes' AS minute,
+        MIN(retrieved) AS firstseen,
         COUNT(*)
       FROM nyt.headlines
       WHERE uri=$1
@@ -149,9 +151,10 @@ const fetchArticleTimeSeries = async (client, uri) => {
       viewsperminute.rank,
       headline,
       minutecounts.count AS count,
-      totalperminute.count AS total
+      tpm.count AS total,
+      tpm.firstseen
     FROM minutecounts
-    JOIN totalperminute ON totalperminute.minute=minutecounts.minute
+    JOIN totalperminute AS tpm ON tpm.minute=minutecounts.minute
     FULL OUTER JOIN viewsperminute ON minutecounts.minute=viewsperminute.period
   `;
   const res = await client.query(query, [uri]);
@@ -344,7 +347,8 @@ exports.queryHeadlines = async (client, searchQuery) => {
       JOIN nyt.articlestats AS ast ON ast.uri=h.uri
     WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-    LIMIT 10;
+    ORDER BY 11 DESC
+    LIMIT 20;
   `;
   const res = await client.query(query, [tsQuery]);
   const articles = await articlesFromHeadlines(client, res.rows, true);
@@ -633,24 +637,26 @@ const articleFromheadlines = async (
     0
   );
   const frontPagePeriods = parseInt(currHeadlines[0].periods, 10);
-  const withPct = currHeadlines.map((currHeadline) => {
-    const newHeadline = {
-      ...currHeadline,
-      pct: Math.round((100 * parseInt(currHeadline.count, 10)) / total),
-    };
-    delete newHeadline.weburl;
-    delete newHeadline.rank;
-    delete newHeadline.abstract;
-    delete newHeadline.imageurl;
-    delete newHeadline.canonicalheadline;
-    delete newHeadline.printheadline;
-    delete newHeadline.periods;
-    delete newHeadline.viewcountmin;
-    delete newHeadline.sharecountmin;
-    delete newHeadline.emailcountmin;
-    delete newHeadline.headlinecount;
-    return newHeadline;
-  });
+  const withPct = currHeadlines
+    .map((currHeadline) => {
+      const newHeadline = {
+        ...currHeadline,
+        pct: Math.round((100 * parseInt(currHeadline.count, 10)) / total),
+      };
+      delete newHeadline.weburl;
+      delete newHeadline.rank;
+      delete newHeadline.abstract;
+      delete newHeadline.imageurl;
+      delete newHeadline.canonicalheadline;
+      delete newHeadline.printheadline;
+      delete newHeadline.periods;
+      delete newHeadline.viewcountmin;
+      delete newHeadline.sharecountmin;
+      delete newHeadline.emailcountmin;
+      delete newHeadline.headlinecount;
+      return newHeadline;
+    })
+    .sort((a, b) => a.firstseen - b.firstseen);
 
   // Get time series for article with multiple headlines
   let timeSeries = null;
