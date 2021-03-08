@@ -226,17 +226,21 @@ exports.fetchOverallStats = async (client) => {
 
   const abEffectsQuery = `
     SELECT
-      SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ie,
-      SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS ce,
-      SUM(CASE WHEN COALESCE(headlinecount, 0) <= 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS cn,
-      SUM(CASE WHEN COALESCE(headlinecount, 0) > 1 AND NOT (viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21) THEN 1 ELSE 0 END) AS "in"
-    FROM nyt.articlestats`;
+      headlinecount,
+      SUM(CASE WHEN viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21 THEN 1 ELSE 0 END) AS ranked,
+      COUNT(*) AS total
+    FROM nyt.articlestats
+    GROUP BY 1
+    ORDER BY 1 ASC`;
   const abEffectsRes = await client.query(abEffectsQuery);
-  const abData = abEffectsRes.rows[0];
   const abEffects = [
-    ["Group", "% that rank"],
-    ["A/B Tested", Math.round((100 * abData.ie) / abData.in)],
-    ["One headline", Math.round((100 * abData.ce) / abData.cn)],
+    ["# of headlines", "% that rank"],
+    ...abEffectsRes.rows.slice(1, 5).map((r) => {
+      return [
+        r.headlinecount,
+        Math.round((100 * parseInt(r.ranked, 10)) / parseInt(r.total, 10)),
+      ];
+    }),
   ];
 
   const headlineHistQuery = `SELECT headlinecount, COUNT(*)

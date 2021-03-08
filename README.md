@@ -278,6 +278,16 @@ SELECT
 FROM nyt.articlestats
 ```
 
+````sql
+SELECT
+  headlinecount,
+  SUM(CASE WHEN viewcountmin < 21 OR sharecountmin < 21 OR emailcountmin < 21 THEN 1 ELSE 0 END) AS ranked,
+  COUNT(*) AS total
+FROM nyt.articlestats
+GROUP BY 1
+ORDER BY 1 ASC
+```
+
 ## Front page time by section
 
 ```sql
@@ -289,4 +299,4 @@ FROM nyt.articles AS a
 WHERE st.headlinecount > 0
 GROUP BY 1
 ORDER BY  2 DESC
-```
+````
