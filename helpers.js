@@ -20,6 +20,10 @@ const COLORS = {
   ],
 };
 
+const archiveUrl = (url) => {
+  return `https://archive.today/?run=1&url=${encodeURIComponent(url)}`;
+};
+
 const stringToColor = (str) => {
   const index =
     str.split().reduce((sum, c) => c.charCodeAt(0) + sum, 0) %
@@ -32,6 +36,7 @@ exports.getExpressLocals = () => {
     stringToColor,
     ordinal,
     dayjs,
+    archiveUrl,
   };
 };
 

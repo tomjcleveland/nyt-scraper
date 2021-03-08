@@ -8,6 +8,7 @@ const {
   fetchCurrentArticles,
   fetchMostShownArticles,
   fetchOverallStats,
+  fetchMostXArticles,
 } = require("./db");
 const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
@@ -95,24 +96,40 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/mostpromoted", async (req, res) => {
-    const articles = await fetchMostShownArticles(
-      dbClient,
-      req.query.duration === "allTime"
-    );
-    renderPage(req, res, "pages/mostshown", {
-      articles,
-      title: "Most promoted articles",
-      description: "The most-promoted articles from the last week.",
-    });
-  });
-
   app.get("/mostemailed", async (req, res) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.EMAILED);
     renderPage(req, res, "pages/mostemailed", {
       articles,
       title: "Most emailed articles",
       description: "The 20 most-emailed New York Times articles, right now.",
+    });
+  });
+
+  app.get("/mostpromoted", async (req, res) => {
+    const allTime = req.query.duration === "allTime";
+    const articles = await fetchMostXArticles(dbClient, allTime, "periods");
+    renderPage(req, res, "pages/mostshown", {
+      articles,
+      title: "Most promoted articles",
+      description: `The most-promoted articles ${
+        allTime ? "of all time" : "in the last week"
+      }.`,
+    });
+  });
+
+  app.get("/mostheadlines", async (req, res) => {
+    const allTime = req.query.duration === "allTime";
+    const articles = await fetchMostXArticles(
+      dbClient,
+      allTime,
+      "headlinecount"
+    );
+    renderPage(req, res, "pages/mostheadlines", {
+      articles,
+      title: "Articles with the most headlines",
+      description: `The articles with the most headlines ${
+        allTime ? "of all time" : "in the last week"
+      }.`,
     });
   });
 

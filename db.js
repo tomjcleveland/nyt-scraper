@@ -445,7 +445,7 @@ exports.fetchMostViewedArticles = async (client) => {
   return articlesFromHeadlines(client, res.rows);
 };
 
-exports.fetchMostShownArticles = async (client, allTime) => {
+exports.fetchMostXArticles = async (client, allTime, field) => {
   let intervalClause = `WHERE a.published > now() - interval '7 days'`;
   if (allTime) {
     intervalClause = "";
@@ -462,7 +462,7 @@ exports.fetchMostShownArticles = async (client, allTime) => {
       FROM nyt.articlestats AS ast
         JOIN nyt.articles AS a ON a.uri=ast.uri
       ${intervalClause}
-      ORDER BY periods DESC
+      ORDER BY ${field} DESC
       LIMIT 20
     )
     SELECT
@@ -480,7 +480,7 @@ exports.fetchMostShownArticles = async (client, allTime) => {
       tt.periods
     FROM nyt.articles AS a
       INNER JOIN topten AS tt ON tt.uri=a.uri
-    ORDER BY tt.periods DESC`;
+    ORDER BY tt.${field} DESC`;
   const res = await client.query(query);
   return res.rows.map((a, i) => ({ ...articleFromStats(a), rank: i + 1 }));
 };
