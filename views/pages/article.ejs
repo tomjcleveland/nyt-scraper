@@ -13,6 +13,14 @@
       <div class="card-body">
         <p class="card-text mb-1"><%= dayjs(article.published).format('MMMM D, YYYY') %></p>
         <h1 style="card-text"><%= article.headline || article.canonicalheadline %></h1>
+        <% if (article.section) { %>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page"><span class="badge bg-secondary" style="font-size: 12px;"><%= article.section.toUpperCase() %></span></li>
+            <% if (article.subsection) { %>
+              <li class="breadcrumb-item active" aria-current="page"><span class="badge bg-secondary" style="font-size: 12px;"><%= article.subsection.toUpperCase() %></span></li>
+            <% } %>
+          </ol>
+        <% } %>
       </div>
       <% if (article.imageUrl) { %>
         <img style="width: 100%; margin-bottom: 20px;" src="<%= article.imageUrl %>">

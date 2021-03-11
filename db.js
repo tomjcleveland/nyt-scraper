@@ -74,6 +74,10 @@ exports.fetchArticleById = async (client, id) => {
       a.wordcount,
       a.deletedat,
       a.refreshedat,
+      a.desk,
+      a.section,
+      a.subsection,
+      a.tone,
       MIN(h.retrieved) AS firstseen,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved,
@@ -86,7 +90,7 @@ exports.fetchArticleById = async (client, id) => {
       LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   `;
   const res = await client.query(query, [id]);
   if (res.rows.length === 0) {
@@ -115,11 +119,17 @@ exports.markArticleDeleted = async (client, uri) => {
 
 exports.addArticleDetails = async (client, article) => {
   const query = `
-    INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount,refreshedat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    INSERT INTO nyt.articles
+      (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount,refreshedat,desk,section,subsection,tone)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     ON CONFLICT ON CONSTRAINT articles_pkey
     DO UPDATE SET
       weburl=EXCLUDED.weburl,
       wordcount=EXCLUDED.wordcount,
+      desk=EXCLUDED.desk,
+      section=EXCLUDED.section,
+      subsection=EXCLUDED.subsection,
+      tone=EXCLUDED.tone,
       refreshedat=EXCLUDED.refreshedat
   `;
   const imageUrl =
@@ -128,7 +138,7 @@ exports.addArticleDetails = async (client, article) => {
       : null;
   await client.query(query, [
     article.uri,
-    article.web_url,
+    article.web_url || article.weburl || article.url,
     article.abstract,
     article.lead_paragraph,
     imageUrl,
@@ -138,6 +148,10 @@ exports.addArticleDetails = async (client, article) => {
     article.byline?.original,
     article.wordCount,
     article.refreshedat,
+    article.desk,
+    article.section,
+    article.subsection,
+    article.tone,
   ]);
 };
 
@@ -631,7 +645,7 @@ const articleFromStats = (row) => {
     shareRankMin: parseInt(row.sharecountmin, 10),
     emailRankMin: parseInt(row.emailcountmin, 10),
     imageUrl: row.imageurl || row.imageUrl,
-    section: url ? url.split("/")[6] : null,
+    section: row.section || (url ? url.split("/")[6] : null),
   };
 };
 
@@ -664,6 +678,10 @@ const articleFromheadlines = async (
   const wordcount = currHeadlines[0].wordcount;
   const deletedat = currHeadlines[0].deletedat;
   const refreshedat = currHeadlines[0].refreshedat;
+  const desk = currHeadlines[0].desk;
+  const section = currHeadlines[0].section;
+  const subsection = currHeadlines[0].subsection;
+  const tone = currHeadlines[0].tone;
   const total = currHeadlines.reduce(
     (acc, curr) => acc + parseInt(curr.count, 10),
     0
@@ -689,6 +707,10 @@ const articleFromheadlines = async (
       delete newHeadline.wordcount;
       delete newHeadline.deletedat;
       delete newHeadline.refreshedat;
+      delete newHeadline.desk;
+      delete newHeadline.section;
+      delete newHeadline.subsection;
+      delete newHeadline.tone;
       return newHeadline;
     })
     .sort((a, b) => a.firstseen - b.firstseen);
@@ -710,6 +732,10 @@ const articleFromheadlines = async (
     published,
     deletedat,
     refreshedat,
+    desk,
+    section,
+    subsection,
+    tone,
     canonicalheadline,
     printheadline,
     frontPagePeriods,

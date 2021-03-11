@@ -122,8 +122,8 @@ const articleFromResponse = (respJson) => {
     uri: rawArticle.uri,
     wordCount: rawArticle.wordCount,
     desk: rawArticle.desk,
-    section: rawArticle.section.name,
-    subsection: rawArticle.section.subsection,
+    section: rawArticle.section?.name,
+    subsection: rawArticle.subsection?.name,
     tone: rawArticle.tone,
     tags: rawArticle.timesTags.map((tt) => tt.vernacular),
     bylines: rawArticle.bylines.map((bl) => {
