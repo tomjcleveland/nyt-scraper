@@ -8,6 +8,7 @@ const {
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
 const sentryInit = require("./sentry");
+const Sentry = require("@sentry/node");
 
 // How long to sleep between GraphQL requests
 const SLEEP_INTERVAL = 6 * 1000;
