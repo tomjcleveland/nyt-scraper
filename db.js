@@ -135,7 +135,7 @@ exports.addArticleDetails = async (client, article) => {
     article.headline.main,
     article.headline.print_headline,
     article.pub_date ? new Date(article.pub_date) : null,
-    article.byline.original,
+    article.byline?.original,
     article.wordCount,
     article.refreshedat,
   ]);
