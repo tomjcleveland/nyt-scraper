@@ -10,6 +10,7 @@ import "./index.css";
 const URL = "https://graphql.nyt.tjcx.me/graphql/v2";
 
 function graphQLFetcher(graphQLParams) {
+  console.log(graphQLParams);
   return fetch(URL, {
     method: "post",
     credentials: "include",

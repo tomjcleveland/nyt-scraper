@@ -71,6 +71,9 @@ exports.fetchArticleById = async (client, id) => {
       a.imageurl,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      a.wordcount,
+      a.deletedat,
+      a.refreshedat,
       MIN(h.retrieved) AS firstseen,
       COUNT(*),
       MAX(retrieved) AS lastRetrieved,
@@ -83,7 +86,7 @@ exports.fetchArticleById = async (client, id) => {
       LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
   `;
   const res = await client.query(query, [id]);
   if (res.rows.length === 0) {
@@ -93,13 +96,34 @@ exports.fetchArticleById = async (client, id) => {
   return articleFromStats(article);
 };
 
+exports.fetchArticlesToRefresh = async (client, count) => {
+  const query = `
+    SELECT uri
+    FROM nyt.articles
+    WHERE deletedat IS NULL
+    ORDER BY refreshedat ASC
+    LIMIT $1
+  `;
+  const res = await client.query(query, [count]);
+  return res.rows.map((r) => r.uri);
+};
+
+exports.markArticleDeleted = async (client, uri) => {
+  const query = `UPDATE nyt.articles SET deletedat=$2 WHERE uri=$1`;
+  await client.query(query, [uri, new Date()]);
+};
+
 exports.addArticleDetails = async (client, article) => {
   const query = `
-    INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    INSERT INTO nyt.articles (uri,weburl,abstract,leadparagraph,imageurl,headline,printheadline,published,byline,wordcount,refreshedat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     ON CONFLICT ON CONSTRAINT articles_pkey
-    DO UPDATE SET weburl=EXCLUDED.weburl`;
+    DO UPDATE SET
+      weburl=EXCLUDED.weburl,
+      wordcount=EXCLUDED.wordcount,
+      refreshedat=EXCLUDED.refreshedat
+  `;
   const imageUrl =
-    article.multimedia.length > 0
+    article.multimedia && article.multimedia.length > 0
       ? `https://www.nytimes.com/${article.multimedia[0].url}`
       : null;
   await client.query(query, [
@@ -110,9 +134,10 @@ exports.addArticleDetails = async (client, article) => {
     imageUrl,
     article.headline.main,
     article.headline.print_headline,
-    new Date(article.pub_date),
+    article.pub_date ? new Date(article.pub_date) : null,
     article.byline.original,
-    article.word_count,
+    article.wordCount,
+    article.refreshedat,
   ]);
 };
 
@@ -636,6 +661,9 @@ const articleFromheadlines = async (
   const emailcountmin = currHeadlines[0].emailcountmin;
   const headlinecount = currHeadlines[0].headlinecount;
   const published = currHeadlines[0].published;
+  const wordcount = currHeadlines[0].wordcount;
+  const deletedat = currHeadlines[0].deletedat;
+  const refreshedat = currHeadlines[0].refreshedat;
   const total = currHeadlines.reduce(
     (acc, curr) => acc + parseInt(curr.count, 10),
     0
@@ -658,6 +686,9 @@ const articleFromheadlines = async (
       delete newHeadline.sharecountmin;
       delete newHeadline.emailcountmin;
       delete newHeadline.headlinecount;
+      delete newHeadline.wordcount;
+      delete newHeadline.deletedat;
+      delete newHeadline.refreshedat;
       return newHeadline;
     })
     .sort((a, b) => a.firstseen - b.firstseen);
@@ -677,6 +708,8 @@ const articleFromheadlines = async (
     abstract,
     imageUrl,
     published,
+    deletedat,
+    refreshedat,
     canonicalheadline,
     printheadline,
     frontPagePeriods,
@@ -685,6 +718,7 @@ const articleFromheadlines = async (
     sharecountmin,
     emailcountmin,
     headlinecount,
+    wordcount,
     headlines: withPct,
   };
 };

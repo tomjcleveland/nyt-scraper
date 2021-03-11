@@ -87,6 +87,8 @@ CREATE TABLE articles
     published TIMESTAMP WITH TIME ZONE,
     byline TEXT,
     wordcount INTEGER,
+    deletedat TIMESTAMP WITH TIME ZONE,
+    refreshedat TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
