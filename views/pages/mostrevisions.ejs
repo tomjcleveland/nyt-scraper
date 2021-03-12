@@ -1,0 +1,16 @@
+<%- include('../partials/header') %>
+    <h2 style="margin-bottom: 0;">Articles with the most revisions</h2>
+    <p>
+      These are the articles with the most revisions
+      <% if (req.query.duration === 'allTime') { %>
+        <strong>of all time.</strong>
+        <a href="/mostrevisions">See data from the last seven days.</a>
+      <% } else { %>
+        <strong>in the last 7 days.</strong>
+        <a href="/mostrevisions?duration=allTime">See all time data.</a>
+      <% } %>
+    </p>
+    <% articles.forEach((article) => { %>
+      <%- include('../partials/articleCard', { article }) %>
+    <% }); %>
+<%- include('../partials/footer') %>

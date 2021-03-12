@@ -9,6 +9,7 @@ const {
   fetchMostShownArticles,
   fetchOverallStats,
   fetchMostXArticles,
+  fetchLatestDiff,
 } = require("./db");
 const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
@@ -78,7 +79,7 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/mostviewed", async (req, res) => {
+  app.get("/topviewed", async (req, res) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.VIEWED);
     renderPage(req, res, "pages/mostviewed", {
       articles,
@@ -87,7 +88,7 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/mostshared", async (req, res) => {
+  app.get("/topshared", async (req, res) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.SHARED);
     renderPage(req, res, "pages/mostshared", {
       articles,
@@ -96,7 +97,7 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/mostemailed", async (req, res) => {
+  app.get("/topemailed", async (req, res) => {
     const articles = await fetchRecentPopularityData(dbClient, POPTYPE.EMAILED);
     renderPage(req, res, "pages/mostemailed", {
       articles,
@@ -128,6 +129,22 @@ const renderPage = (req, res, path, vars) => {
       articles,
       title: "Articles with the most headlines",
       description: `The articles with the most headlines ${
+        allTime ? "of all time" : "in the last week"
+      }.`,
+    });
+  });
+
+  app.get("/mostrevisions", async (req, res) => {
+    const allTime = req.query.duration === "allTime";
+    const articles = await fetchMostXArticles(
+      dbClient,
+      allTime,
+      "revisioncount"
+    );
+    renderPage(req, res, "pages/mostrevisions", {
+      articles,
+      title: "Articles with the most revisions",
+      description: `The articles that have been revised most ${
         allTime ? "of all time" : "in the last week"
       }.`,
     });
@@ -165,15 +182,14 @@ const renderPage = (req, res, path, vars) => {
   });
 
   app.get("/articles/:id", async (req, res) => {
-    const article = await fetchArticleById(
-      dbClient,
-      `nyt://article/${req.params.id}`
-    );
+    const uri = `nyt://article/${req.params.id}`;
+    const article = await fetchArticleById(dbClient, uri);
+    const diffInfo = await fetchLatestDiff(dbClient, uri);
     if (!article) {
       res.sendStatus(404);
       return;
     }
-    renderPage(req, res, "pages/article", { article });
+    renderPage(req, res, "pages/article", { article, diffInfo });
   });
 
   app.get("/stats", async (req, res) => {

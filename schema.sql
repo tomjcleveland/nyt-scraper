@@ -193,6 +193,13 @@ AS
     FROM nyt.emailrankings
     GROUP BY 1
   ),
+  revisioncounts AS (
+    SELECT
+      uri,
+      COUNT(*)
+    FROM nyt.articlerevisions
+    GROUP BY 1
+  ),
   allcounts AS (
     SELECT
       COALESCE(vc.uri, sc.uri, ec.uri) AS uri,
@@ -210,11 +217,13 @@ AS
     MIN(COALESCE(cc.viewrank, 21)) AS viewcountmin,
     MIN(COALESCE(cc.sharerank, 21)) AS sharecountmin,
     MIN(COALESCE(cc.emailrank, 21)) AS emailcountmin,
-    COUNT(DISTINCT h.headline) AS headlinecount
+    COUNT(DISTINCT h.headline) AS headlinecount,
+    MIN(COALESCE(rc.count, 0)) AS revisioncount
   FROM
     articlecounts AS ac
       LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
       LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
+      LEFT JOIN revisioncounts AS rc ON rc.uri=ac.uri
   GROUP BY 1
 WITH DATA;
 

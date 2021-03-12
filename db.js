@@ -1,4 +1,6 @@
 const { Client } = require("pg");
+const Diff2html = require("diff2html");
+const Diff = require("diff");
 const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
@@ -98,6 +100,26 @@ exports.fetchArticleById = async (client, id) => {
   }
   const article = await articleFromheadlines(client, id, res.rows);
   return articleFromStats(article);
+};
+
+exports.fetchLatestDiff = async (client, uri) => {
+  const query = `
+    SELECT body, created FROM nyt.articlerevisions
+    WHERE uri=$1 ORDER BY created DESC LIMIT 2`;
+  const res = await client.query(query, [uri]);
+  if (!res.rows || res.rows.length < 2) {
+    return null;
+  }
+  const patch = Diff.createPatch("Article", res.rows[0].body, res.rows[1].body);
+  const diffHtml = Diff2html.html(patch, {
+    drawFileList: false,
+  });
+  return {
+    revisedAt: res.rows[0].created,
+    index: 0,
+    previousRevisionTime: res.rows.length > 2 ? res.rows[1].created : null,
+    diffHtml,
+  };
 };
 
 exports.upsertRevision = async (client, uri, body) => {
@@ -516,6 +538,7 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
         ast.sharecountmin,
         ast.emailcountmin,
         ast.headlinecount,
+        ast.revisioncount,
         ast.periods
       FROM nyt.articlestats AS ast
         JOIN nyt.articles AS a ON a.uri=ast.uri
@@ -535,6 +558,7 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
       tt.sharecountmin,
       tt.emailcountmin,
       tt.headlinecount,
+      tt.revisioncount,
       tt.periods
     FROM nyt.articles AS a
       INNER JOIN topten AS tt ON tt.uri=a.uri
