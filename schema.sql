@@ -113,10 +113,6 @@ CREATE TABLE viewrankings
 DROP TRIGGER IF EXISTS update_viewrankings_transaction_columns ON viewrankings;
 CREATE TRIGGER update_viewrankings_transaction_columns BEFORE UPDATE ON viewrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
--- CREATE TRIGGER viewrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
--- ON viewrankings
--- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
-
 -- Share Rankings
 
 CREATE TABLE sharerankings
@@ -129,10 +125,6 @@ CREATE TABLE sharerankings
 
 DROP TRIGGER IF EXISTS update_sharerankings_transaction_columns ON sharerankings;
 CREATE TRIGGER update_sharerankings_transaction_columns BEFORE UPDATE ON sharerankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
-
--- CREATE TRIGGER sharerankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
--- ON sharerankings
--- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
 
 -- Email Rankings
 
@@ -147,9 +139,14 @@ CREATE TABLE emailrankings
 DROP TRIGGER IF EXISTS update_emailrankings_transaction_columns ON emailrankings;
 CREATE TRIGGER update_emailrankings_transaction_columns BEFORE UPDATE ON emailrankings FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
--- CREATE TRIGGER emailrankings_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
--- ON emailrankings
--- FOR EACH STATEMENT EXECUTE PROCEDURE refresh_articlestats();
+-- Article revisions
+
+CREATE TABLE articlerevisions
+(
+    uri TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
 
 ------------------------
 -- MATERIALIZED VIEWS --

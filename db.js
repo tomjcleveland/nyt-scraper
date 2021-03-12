@@ -100,6 +100,21 @@ exports.fetchArticleById = async (client, id) => {
   return articleFromStats(article);
 };
 
+exports.upsertRevision = async (client, uri, body) => {
+  const query1 = `
+  SELECT body FROM nyt.articlerevisions WHERE uri=$1 ORDER BY created LIMIT 1`;
+  const res = await client.query(query1, [uri]);
+  if (res.rows && res.rows.length > 0 && res.rows[0].body === body) {
+    // No update
+    return false;
+  }
+  const query2 = `
+  INSERT INTO nyt.articlerevisions (uri,body)
+  VALUES ($1,$2)`;
+  await client.query(query2, [uri, body]);
+  return true;
+};
+
 exports.fetchArticlesToRefresh = async (client, count) => {
   const query = `
     SELECT uri

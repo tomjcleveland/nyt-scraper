@@ -4,6 +4,7 @@ const {
   addArticleDetails,
   markArticleDeleted,
   fetchArticlesToRefresh,
+  upsertRevision,
 } = require("./db");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
@@ -14,7 +15,7 @@ const Sentry = require("@sentry/node");
 const SLEEP_INTERVAL = 6 * 1000;
 
 // How many articles to refresh when this script is run
-const ARTICLES_PER_RUN = 10;
+const ARTICLES_PER_RUN = 30;
 
 sentryInit();
 
@@ -27,6 +28,14 @@ const refreshArticle = async (dbClient, uri) => {
       ...refreshedArticle,
       refreshedat: new Date(),
     });
+    const newRevision = await upsertRevision(
+      dbClient,
+      uri,
+      refreshedArticle.body
+    );
+    if (newRevision) {
+      logger.info(`New revisions for article ${uri}`);
+    }
   } else {
     logger.info(`Deleted article detected: ${uri}`);
     await markArticleDeleted(dbClient, uri);
