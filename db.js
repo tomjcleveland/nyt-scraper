@@ -124,7 +124,7 @@ exports.fetchLatestDiff = async (client, uri) => {
 
 exports.upsertRevision = async (client, uri, body) => {
   const query1 = `
-  SELECT body FROM nyt.articlerevisions WHERE uri=$1 ORDER BY created LIMIT 1`;
+  SELECT body FROM nyt.articlerevisions WHERE uri=$1 ORDER BY created DESC LIMIT 1`;
   const res = await client.query(query1, [uri]);
   if (res.rows && res.rows.length > 0 && res.rows[0].body === body) {
     // No update
