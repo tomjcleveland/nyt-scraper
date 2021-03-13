@@ -11,6 +11,7 @@ const {
   fetchMostXArticles,
   fetchLatestDiff,
   fetchDeletedArticles,
+  fetchDiff,
 } = require("./db");
 const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
@@ -171,8 +172,9 @@ const renderPage = (req, res, path, vars) => {
 
   app.get("/articles/:id", async (req, res) => {
     const uri = `nyt://article/${req.params.id}`;
+    const index = parseInt(req.query.rev, 10) || 0;
     const article = await fetchArticleById(dbClient, uri);
-    const diffInfo = await fetchLatestDiff(dbClient, uri);
+    const diffInfo = await fetchDiff(dbClient, uri, index);
     if (!article) {
       res.sendStatus(404);
       return;

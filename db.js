@@ -1,6 +1,7 @@
 const { Client } = require("pg");
 const Diff2html = require("diff2html");
 const Diff = require("diff");
+const dayjs = require("dayjs");
 const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
@@ -102,22 +103,28 @@ exports.fetchArticleById = async (client, id) => {
   return articleFromStats(article);
 };
 
-exports.fetchLatestDiff = async (client, uri) => {
+exports.fetchDiff = async (client, uri, index) => {
   const query = `
     SELECT body, created FROM nyt.articlerevisions
-    WHERE uri=$1 ORDER BY created DESC LIMIT 2`;
+    WHERE uri=$1 ORDER BY created DESC`;
   const res = await client.query(query, [uri]);
   if (!res.rows || res.rows.length < 2) {
     return null;
   }
-  const patch = Diff.createPatch("Article", res.rows[0].body, res.rows[1].body);
+  const currIndex = index || 0;
+  const revisedAt = res.rows[currIndex].created;
+  const patch = Diff.createPatch(
+    dayjs(revisedAt).format("MMMM D, YYYY [at] h:mm a"),
+    res.rows[currIndex + 1].body,
+    res.rows[currIndex].body
+  );
   const diffHtml = Diff2html.html(patch, {
     drawFileList: false,
   });
   return {
-    revisedAt: res.rows[0].created,
-    index: 0,
-    previousRevisionTime: res.rows.length > 2 ? res.rows[1].created : null,
+    revisedAt,
+    index: currIndex,
+    count: res.rows.length - 1,
     diffHtml,
   };
 };

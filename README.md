@@ -376,3 +376,45 @@ FROM nyt.articles AS a
   LEFT JOIN latestbodies AS lb ON lb.uri=a.uri
 WHERE articles.uri=a.uri
 ```
+
+```sql
+CREATE OR REPLACE FUNCTION refreshSearchIndex() RETURNS void AS $$
+  WITH uniqueheadlines AS (
+    SELECT
+      uri,
+      headline
+    FROM nyt.headlines
+    GROUP BY 1, 2
+  ),
+  headlineblobs AS (
+    SELECT
+      uri,
+      STRING_AGG(headline, ' ') AS headlines
+    FROM uniqueheadlines
+    GROUP BY 1
+  ),
+  latestbodytimes AS (
+    SELECT
+      uri,
+      MAX(created) AS created
+    FROM nyt.articlerevisions
+    GROUP BY 1
+  ),
+  latestbodies AS (
+    SELECT
+      r.uri,
+      r.body
+    FROM nyt.articlerevisions AS r
+      INNER JOIN latestbodytimes AS lbt
+        ON (r.uri=lbt.uri AND r.created=lbt.created)
+  )
+  UPDATE
+    nyt.articles
+  SET tsv=to_tsvector('english', COALESCE(hb.headlines, '') || COALESCE(lb.body, ''))
+  FROM nyt.articles AS a
+    LEFT JOIN headlineblobs AS hb ON hb.uri=a.uri
+    LEFT JOIN latestbodies AS lb ON lb.uri=a.uri
+  WHERE articles.uri=a.uri
+$$
+LANGUAGE sql;
+```

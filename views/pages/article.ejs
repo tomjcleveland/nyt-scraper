@@ -48,8 +48,18 @@
       <div class="col mt-4">
         <div class="card shadow-sm">
           <div class="card-body">
-            <h3 class="card-text">Latest revision</h3>
-            <p class="card-text"><small class="text-muted">Revised on <strong><%- dayjs(article.published).format('MMMM D, YYYY[</strong> at <strong>]h:mm a') %> UTC</strong></small></p>
+            <h3 class="card-text">Revisions</h3>
+            <ul class="pagination">
+              <li class="page-item<%= diffInfo.count - 1 === diffInfo.index ? ' disabled' : '' %>">
+                <a class="page-link" href="<%= req.path %>?rev=<%= diffInfo.index + 1 %>" tabindex="-1">Previous</a>
+              </li>
+              <% for (let i = diffInfo.count - 1; i >= 0; i--) { %>
+                <li class="page-item<%= i === diffInfo.index ? ' active' : '' %>"><a class="page-link" href="<%= req.path %>?rev=<%= i %>"><%= diffInfo.count - i %></a></li>
+              <% } %>
+              <li class="page-item<%= diffInfo.index === 0 ? ' disabled' : '' %>">
+                <a class="page-link" href="<%= req.path %>?rev=<%= diffInfo.index - 1 %>">Next</a>
+              </li>
+            </ul>
             <div><%- diffInfo.diffHtml %></div>
           </div>
         </div>
