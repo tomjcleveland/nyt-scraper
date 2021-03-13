@@ -1,5 +1,4 @@
 const fetch = require("node-fetch");
-const { queryHeadlines, addDeletedArticle } = require("./db");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
 const {

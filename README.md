@@ -300,3 +300,27 @@ WHERE st.headlinecount > 0
 GROUP BY 1
 ORDER BY  2 DESC
 ````
+
+## Deleted
+
+```sql
+SELECT
+  a.uri,
+  a.weburl,
+  a.abstract,
+  a.imageurl,
+  a.published,
+  a.headline AS canonicalheadline,
+  a.printheadline AS printheadline,
+  ast.viewcountmin,
+  ast.sharecountmin,
+  ast.emailcountmin,
+  ast.headlinecount,
+  ast.revisioncount,
+  ast.periods
+FROM nyt.articles AS a
+  INNER JOIN nyt.articlestats AS ast ON ast.uri=a.uri
+WHERE a.deletedat IS NOT NULL
+AND a.uri LIKE '%article%'
+ORDER BY a.deletedat DESC
+```

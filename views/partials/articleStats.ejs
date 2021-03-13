@@ -49,3 +49,8 @@
   <%- include('./rankBars', { rank: article.shareRankMin, adjective: 'shared' }) %>
   <%- include('./rankBars', { rank: article.emailRankMin, adjective: 'emailed' }) %>
 </div>
+<% if (article.deletedat) { %>
+  <p><span class="badge bg-danger">
+    DELETED
+  </span></p>
+<% } %>

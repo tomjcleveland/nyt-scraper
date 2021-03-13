@@ -1,12 +1,17 @@
 <%- include('../partials/header') %>
-  <h2>Deleted headlines</h2>
-  <p>These headlines were deleted before we could fetch metadata from the NYT API.</p>
-  <ul>
-    <% deletedHeadlines.forEach((headline) => { %>
-      <li>
-        <p style="margin: 0;"><%= headline.headline %></p>
-        <small><code><%= headline.uri %></code></small>
-      </li>
-    <% }) %>
-  </ul>
+    <h2 style="margin-bottom: 0;">Deleted articles</h2>
+    <p>
+      These articles have been deleted from the New York Times' public API
+      <% if (req.query.duration === 'allTime') { %>
+        <strong>since the beginning of time</strong>
+        <a href="/deleted">See data from the last seven days.</a>
+      <% } else { %>
+        <strong>in the last 7 days.</strong>
+        <a href="/deleted?duration=allTime">See all time data.</a>
+      <% } %>
+    </p>
+    <p><strong>Note:</strong> Articles are usually deleted for innocuous reasons. Often, a story anticipating an event is deleted after the event happens, or a article is deleted so that it can be replaced by an interactive page.</p>
+    <% articles.forEach((article) => { %>
+      <%- include('../partials/articleCard', { article }) %>
+    <% }); %>
 <%- include('../partials/footer') %>

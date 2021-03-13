@@ -99,27 +99,30 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="me-2 nav-item dropdown">
-              <a class="nav-link dropdown-toggle<%= path.startsWith('/top') || path === '/' ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle<%= path.startsWith('/top') ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Top...
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item<%= path === '/topviewed' || path === '/' ? ' active' : '' %>" href="/topviewed">... viewed</a></li>
+                <li><a class="dropdown-item<%= path === '/topviewed' ? ' active' : '' %>" href="/topviewed">... viewed</a></li>
                 <li><a class="dropdown-item<%= path === '/topshared' ? ' active' : '' %>" href="/topshared">... shared</a></li>
                 <li><a class="dropdown-item<%= path === '/topemailed' ? ' active' : '' %>" href="/topemailed">... emailed</a></li>
               </ul>
             </li>
             <li class="me-2 nav-item dropdown">
-              <a class="nav-link dropdown-toggle<%= path.startsWith('/most') || path === '/' ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle<%= path.startsWith('/most') ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Most...
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item<%= path === '/mostpromoted' || path === '/' ? ' active' : '' %>" href="/mostpromoted">...promoted</a></li>
+                <li><a class="dropdown-item<%= path === '/mostpromoted' ? ' active' : '' %>" href="/mostpromoted">...promoted</a></li>
                 <li><a class="dropdown-item<%= path === '/mostheadlines' ? ' active' : '' %>" href="/mostheadlines">...headlines</a></li>
                 <li><a class="dropdown-item<%= path === '/mostrevisions' ? ' active' : '' %>" href="/mostrevisions">...revised</a></li>
               </ul>
             </li>
             <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/frontpage' ? ' active' : '' %>" aria-current="page" href="/frontpage">Front page</a>
+            </li>
+            <li class="me-2 nav-item">
+              <a class="nav-link<%= path === '/deleted' ? ' active' : '' %>" aria-current="page" href="/deleted">Deleted</a>
             </li>
             <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/stats' ? ' active' : '' %>" aria-current="page" href="/stats">Stats</a>

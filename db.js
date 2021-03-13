@@ -554,6 +554,7 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
       a.published,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      a.deletedat,
       tt.viewcountmin,
       tt.sharecountmin,
       tt.emailcountmin,
@@ -565,11 +566,6 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
     ORDER BY tt.${field} DESC`;
   const res = await client.query(query);
   return res.rows.map((a, i) => ({ ...articleFromStats(a), rank: i + 1 }));
-};
-
-exports.addDeletedArticle = async (client, uri, headline) => {
-  const query = `INSERT INTO nyt.deletedarticles (uri, headline) VALUES ($1,$2)`;
-  await client.query(query, [uri, headline]);
 };
 
 const POPTYPE_TO_TABLE = {
@@ -610,6 +606,7 @@ exports.fetchRecentPopularityData = async (client, type) => {
       a.abstract,
       a.published,
       a.headline AS canonicalheadline,
+      a.deletedat,
       s.viewcountmin,
       s.sharecountmin,
       s.emailcountmin,
@@ -626,14 +623,39 @@ exports.fetchRecentPopularityData = async (client, type) => {
 /**
  * Fetch headlines whose URIs no longer exist in the public API
  * @param {*} client
+ * @param {Boolean} allTime Whether to fetch all-time data, or just the last week
  * @returns {Headline[]}
  */
-exports.fetchDeletedHeadlines = async (client) => {
+exports.fetchDeletedArticles = async (client, allTime) => {
+  let intervalClause = `a.published > now() - interval '7 days' AND`;
+  if (allTime) {
+    intervalClause = "";
+  }
   const query = `
-    SELECT h.uri, h.headline FROM nyt.headlines AS h LEFT JOIN nyt.articles AS a ON h.uri=a.uri WHERE a.uri IS NULL GROUP BY 1, 2
+    SELECT
+      a.uri,
+      a.weburl,
+      a.abstract,
+      a.imageurl,
+      a.published,
+      a.headline AS canonicalheadline,
+      a.printheadline AS printheadline,
+      a.deletedat,
+      ast.viewcountmin,
+      ast.sharecountmin,
+      ast.emailcountmin,
+      ast.headlinecount,
+      ast.revisioncount,
+      ast.periods
+    FROM nyt.articles AS a
+      INNER JOIN nyt.articlestats AS ast ON ast.uri=a.uri
+    WHERE ${intervalClause}
+    a.deletedat IS NOT NULL
+    AND a.uri LIKE '%article%'
+    ORDER BY a.deletedat DESC
   `;
   const res = await client.query(query);
-  return res.rows;
+  return res.rows.map((a, i) => ({ ...articleFromStats(a), rank: i + 1 }));
 };
 
 /**
@@ -683,6 +705,7 @@ const articleFromStats = (row) => {
     viewRankMin: parseInt(row.viewcountmin, 10),
     shareRankMin: parseInt(row.sharecountmin, 10),
     emailRankMin: parseInt(row.emailcountmin, 10),
+    revisioncount: parseInt(row.revisioncount, 10),
     imageUrl: row.imageurl || row.imageUrl,
     section: row.section || (url ? url.split("/")[6] : null),
   };

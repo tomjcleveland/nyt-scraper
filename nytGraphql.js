@@ -138,6 +138,7 @@ const articleFromResponse = (respJson) => {
               .join("")
           : null
       )
+      .filter((p) => !!p)
       .join("\n\n")
       .trim(),
   };

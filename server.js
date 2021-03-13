@@ -10,6 +10,7 @@ const {
   fetchOverallStats,
   fetchMostXArticles,
   fetchLatestDiff,
+  fetchDeletedArticles,
 } = require("./db");
 const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
@@ -150,19 +151,6 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/popular", async (req, res) => {
-    const popularityRows = await fetchRecentPopularityData(
-      dbClient,
-      POPTYPE.VIEWED
-    );
-    const headlines = popularityRowsToHeadlines(popularityRows);
-    const popularityDataTable = popularityRowsToDataTable(popularityRows);
-    renderPage(req, res, "pages/popular", {
-      headlines,
-      popularityDataTable,
-    });
-  });
-
   app.get("/search", async (req, res) => {
     const results = await queryHeadlines(dbClient, req.query.q);
     renderPage(req, res, "pages/results", {
@@ -202,8 +190,13 @@ const renderPage = (req, res, path, vars) => {
   });
 
   app.get("/deleted", async (req, res) => {
-    const deletedHeadlines = await fetchDeletedHeadlines(dbClient);
-    renderPage(req, res, "pages/deleted", { deletedHeadlines });
+    const allTime = req.query.duration === "allTime";
+    const articles = await fetchDeletedArticles(dbClient, allTime);
+    renderPage(req, res, "pages/deleted", {
+      articles,
+      title: "Deleted articles | NYT Headlines",
+      description: "Articles that have deleted from the NYT's public API.",
+    });
   });
 
   app.get("/health", async (req, res) => {
