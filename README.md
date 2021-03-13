@@ -324,3 +324,55 @@ WHERE a.deletedat IS NOT NULL
 AND a.uri LIKE '%article%'
 ORDER BY a.deletedat DESC
 ```
+
+```sql
+SELECT
+  uri,
+  MAX(created)
+FROM nyt.headlines
+WHERE to_tsvector('english', headline) @@ to_tsquery('english', 'biden')
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 20
+```
+
+## Search index
+
+```sql
+WITH uniqueheadlines AS (
+  SELECT
+    uri,
+    headline
+  FROM nyt.headlines
+  GROUP BY 1, 2
+),
+headlineblobs AS (
+  SELECT
+    uri,
+    STRING_AGG(headline, ' ') AS headlines
+  FROM uniqueheadlines
+  GROUP BY 1
+),
+latestbodytimes AS (
+  SELECT
+    uri,
+    MAX(created) AS created
+  FROM nyt.articlerevisions
+  GROUP BY 1
+),
+latestbodies AS (
+  SELECT
+    r.uri,
+    r.body
+  FROM nyt.articlerevisions AS r
+    INNER JOIN latestbodytimes AS lbt
+      ON (r.uri=lbt.uri AND r.created=lbt.created)
+)
+UPDATE
+  nyt.articles
+SET tsv=to_tsvector('english', COALESCE(hb.headlines, '') || COALESCE(lb.body, ''))
+FROM nyt.articles AS a
+  LEFT JOIN headlineblobs AS hb ON hb.uri=a.uri
+  LEFT JOIN latestbodies AS lb ON lb.uri=a.uri
+WHERE articles.uri=a.uri
+```

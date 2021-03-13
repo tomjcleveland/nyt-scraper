@@ -91,6 +91,7 @@ CREATE TABLE articles
     section TEXT,
     subsection TEXT,
     tone TEXT,
+    tsv TSVECTOR,
     deletedat TIMESTAMP WITH TIME ZONE,
     refreshedat TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
@@ -99,6 +100,8 @@ CREATE TABLE articles
 
 DROP TRIGGER IF EXISTS update_articles_transaction_columns ON articles;
 CREATE TRIGGER update_articles_transaction_columns BEFORE UPDATE ON articles FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
+
+CREATE INDEX article_search_idx ON articles USING GIN (tsv);
 
 -- View Rankings
 

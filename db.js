@@ -408,31 +408,29 @@ exports.queryHeadlines = async (client, searchQuery) => {
     .join(" & ");
   const query = `
     SELECT
-      h.uri AS id,
-      h.headline,
+      a.uri,
       a.weburl,
       a.abstract,
       a.imageurl,
+      a.published,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      a.deletedat,
+      ts_rank_cd(a.tsv, to_tsquery('english', $1)) AS searchrank,
       ast.viewcountmin,
       ast.sharecountmin,
       ast.emailcountmin,
       ast.headlinecount,
-      ast.periods,
-      COUNT(*),
-      MAX(retrieved) AS lastRetrieved
+      ast.revisioncount,
+      ast.periods
     FROM nyt.articles AS a
-      JOIN nyt.headlines AS h ON a.uri=h.uri
-      JOIN nyt.articlestats AS ast ON ast.uri=h.uri
-    WHERE to_tsvector('english', h.headline) @@ to_tsquery('english', $1)
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-    ORDER BY 11 DESC
-    LIMIT 20;
+      JOIN nyt.articlestats AS ast ON ast.uri=a.uri
+    WHERE a.tsv @@ to_tsquery('english', $1)
+    ORDER BY searchrank DESC
+    LIMIT 20
   `;
   const res = await client.query(query, [tsQuery]);
-  const articles = await articlesFromHeadlines(client, res.rows, true);
-  return articles.map((a) => articleFromStats(a));
+  return res.rows.map((a) => articleFromStats(a));
 };
 
 /**
