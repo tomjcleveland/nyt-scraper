@@ -88,7 +88,8 @@ exports.fetchArticleById = async (client, id) => {
       MIN(ast.headlinecount) AS headlinecount,
       MIN(ast.viewcountmin) AS viewcountmin,
       MIN(ast.sharecountmin) AS sharecountmin,
-      MIN(ast.emailcountmin) AS emailcountmin
+      MIN(ast.emailcountmin) AS emailcountmin,
+      MIN(ast.revisioncount) AS revisioncount
     FROM nyt.articles AS a
       LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
@@ -146,7 +147,7 @@ exports.upsertRevision = async (client, uri, body) => {
 
 exports.fetchArticlesToRefresh = async (client, count) => {
   const query = `
-    SELECT uri
+    SELECT uri, COALESCE(refreshedat, TIMESTAMP '1990-05-24 10:23:54') AS refreshedat
     FROM nyt.articles
     WHERE deletedat IS NULL
     ORDER BY refreshedat ASC
@@ -277,7 +278,7 @@ exports.fetchOverallStats = async (client) => {
 
   const frontPageBySectionQuery = `
     SELECT
-      SPLIT_PART(a.weburl, '/', 7) AS section,
+      COALESCE(a.section, 'unknown') AS section,
       SUM(st.periods) AS totalperiods
     FROM nyt.articles AS a
       JOIN nyt.articlestats AS st ON a.uri=st.uri
@@ -294,8 +295,11 @@ exports.fetchOverallStats = async (client) => {
   ];
   let categoryNewsCount = 0;
   let categoryFluffCount = 0;
+  let categoryOpinionCount = 0;
   for (let row of frontPageBySectionRes.rows) {
-    if (NEWS_CATEGORIES.includes(row.section)) {
+    if (row.section === "opinion") {
+      categoryOpinionCount += parseInt(row.totalperiods, 10);
+    } else if (NEWS_CATEGORIES.includes(row.section)) {
       categoryNewsCount += parseInt(row.totalperiods, 10);
     } else {
       categoryFluffCount += parseInt(row.totalperiods, 10);
@@ -304,6 +308,7 @@ exports.fetchOverallStats = async (client) => {
   const frontPageByCategory = [
     ["Category", "Front page time"],
     ["News", categoryNewsCount],
+    ["Opinion", categoryOpinionCount],
     ["Fluff", categoryFluffCount],
   ];
 
@@ -386,7 +391,9 @@ exports.fetchOverallStats = async (client) => {
     newsCategories: {
       news: NEWS_CATEGORIES,
       fluff: frontPageBySectionRes.rows
-        .filter((r) => !NEWS_CATEGORIES.includes(r.section))
+        .filter(
+          (r) => !NEWS_CATEGORIES.includes(r.section) && r.section !== "opinion"
+        )
         .map((r) => r.section),
     },
   };
@@ -741,6 +748,7 @@ const articleFromheadlines = async (
   const sharecountmin = currHeadlines[0].sharecountmin;
   const emailcountmin = currHeadlines[0].emailcountmin;
   const headlinecount = currHeadlines[0].headlinecount;
+  const revisioncount = currHeadlines[0].revisioncount;
   const published = currHeadlines[0].published;
   const wordcount = currHeadlines[0].wordcount;
   const deletedat = currHeadlines[0].deletedat;
@@ -778,6 +786,7 @@ const articleFromheadlines = async (
       delete newHeadline.section;
       delete newHeadline.subsection;
       delete newHeadline.tone;
+      delete newHeadline.revisioncount;
       return newHeadline;
     })
     .sort((a, b) => a.firstseen - b.firstseen);
@@ -799,6 +808,7 @@ const articleFromheadlines = async (
     published,
     deletedat,
     refreshedat,
+    revisioncount,
     desk,
     section,
     subsection,
