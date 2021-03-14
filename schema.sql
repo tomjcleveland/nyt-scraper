@@ -191,6 +191,16 @@ CREATE TABLE articlerevisions
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
 
+-- Times Tags
+
+CREATE TABLE timestags
+(
+    uri TEXT NOT NULL,
+    tag TEXT NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    UNIQUE (uri, tag)
+);
+
 ------------------------
 -- MATERIALIZED VIEWS --
 ------------------------

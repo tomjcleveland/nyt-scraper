@@ -147,6 +147,13 @@ exports.upsertRevision = async (client, uri, body) => {
   return true;
 };
 
+exports.upsertTimesTag = async (client, uri, tag) => {
+  const query = `
+    INSERT INTO nyt.timestags (uri,tag) VALUES ($1,$2)
+    ON CONFLICT DO NOTHING`;
+  await client.query(query, [uri, tag]);
+};
+
 exports.fetchArticlesToRefresh = async (client, count) => {
   const query = `
     SELECT uri, COALESCE(refreshedat, TIMESTAMP '1990-05-24 10:23:54') AS refreshedat

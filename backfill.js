@@ -6,6 +6,7 @@ const {
   fetchArticlesToRefresh,
   upsertRevision,
   dedupeRevisions,
+  upsertTimesTag,
 } = require("./db");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
@@ -29,6 +30,9 @@ const refreshArticle = async (dbClient, uri) => {
       ...refreshedArticle,
       refreshedat: new Date(),
     });
+    for (let tag of refreshedArticle.tags) {
+      await upsertTimesTag(dbClient, uri, tag);
+    }
     const newRevision = await upsertRevision(
       dbClient,
       uri,
