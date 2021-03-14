@@ -2,6 +2,8 @@ const { Client } = require("pg");
 const Diff2html = require("diff2html");
 const Diff = require("diff");
 const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+dayjs.extend(utc);
 const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
@@ -397,6 +399,45 @@ exports.fetchOverallStats = async (client) => {
         .map((r) => r.section),
     },
   };
+};
+
+const stripNewlines = (str) => {
+  return str.replace(/\n/gi, "");
+};
+
+exports.dedupeRevisions = async (client, uri) => {
+  const query1 = `
+    SELECT body, created FROM nyt.articlerevisions
+    WHERE uri=$1 ORDER BY created DESC`;
+  const res = await client.query(query1, [uri]);
+  if (!res.rows || res.rows.length < 2) {
+    return null;
+  }
+
+  const revsToDelete = [];
+  let lastRevStripped = stripNewlines(res.rows[0].body);
+  for (let i = 1; i < res.rows.length; i++) {
+    const currRevStripped = stripNewlines(res.rows[i].body);
+    if (currRevStripped === lastRevStripped) {
+      revsToDelete.push(res.rows[i].created);
+    }
+  }
+
+  for (let revToDelete of revsToDelete) {
+    const revTimestamp = dayjs(revToDelete)
+      .utc()
+      .format("YYYY-MM-DD HH:mm:ss.SSS");
+    const query2 = `
+      DELETE FROM nyt.articlerevisions
+      WHERE uri=$1
+        AND DATE_TRUNC('minute', created) = DATE_TRUNC('minute', TIMESTAMP '${revTimestamp}')`;
+    const res2 = await client.query(query2, [uri]);
+    if (res2.rowCount != 1) {
+      throw new Error(
+        `Expected to delete one revision for ${uri}; deleted ${res2.rowCount}`
+      );
+    }
+  }
 };
 
 exports.fetchArticlePopularitySeries = async (client, uri) => {

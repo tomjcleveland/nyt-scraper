@@ -418,3 +418,28 @@ CREATE OR REPLACE FUNCTION refreshSearchIndex() RETURNS void AS $$
 $$
 LANGUAGE sql;
 ```
+
+```sql
+WITH toptworevisions AS (
+  SELECT
+    uri,
+    created
+  FROM nyt.articlerevisions
+  ORDER BY created DESC
+  LIMIT 2
+),
+penultimate AS (
+  SELECT
+    uri,
+    MIN(created) AS created
+  FROM toptworevisions
+  GROUP BY 1
+)
+DELETE
+FROM
+  nyt.articlerevisions AS ar
+  USING penultimate AS p
+WHERE p.created=ar.created
+AND p.uri=ar.uri
+AND ar.uri='nyt://article/d7c0e386-157e-5b9f-8e93-b875919fc13c';
+```

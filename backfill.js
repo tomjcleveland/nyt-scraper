@@ -5,6 +5,7 @@ const {
   markArticleDeleted,
   fetchArticlesToRefresh,
   upsertRevision,
+  dedupeRevisions,
 } = require("./db");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
@@ -40,6 +41,7 @@ const refreshArticle = async (dbClient, uri) => {
     logger.info(`Deleted article detected: ${uri}`);
     await markArticleDeleted(dbClient, uri);
   }
+  await dedupeRevisions(dbClient, uri);
 };
 
 const sleep = (timeout) => {
