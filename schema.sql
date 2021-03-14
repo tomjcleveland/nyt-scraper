@@ -263,6 +263,13 @@ AS
       FULL OUTER JOIN sharecounts AS sc ON vc.uri=sc.uri
       FULL OUTER JOIN emailcounts AS ec ON vc.uri=ec.uri
     GROUP BY 1
+  ),
+  aggtags AS (
+    SELECT
+      tt.uri,
+      STRING_AGG(tt.tag, '||') AS tags
+    FROM nyt.timestags AS tt
+    GROUP BY 1
   )
   SELECT
     ac.uri,
@@ -271,12 +278,14 @@ AS
     MIN(COALESCE(cc.sharerank, 21)) AS sharecountmin,
     MIN(COALESCE(cc.emailrank, 21)) AS emailcountmin,
     COUNT(DISTINCT h.headline) AS headlinecount,
-    MIN(COALESCE(rc.count, 0)) AS revisioncount
+    MIN(COALESCE(rc.count, 0)) AS revisioncount,
+    MIN(agt.tags) AS tags
   FROM
     articlecounts AS ac
       LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
       LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
       LEFT JOIN revisioncounts AS rc ON rc.uri=ac.uri
+      LEFT JOIN aggtags AS agt ON agt.uri=ac.uri
   GROUP BY 1
 WITH DATA;
 

@@ -88,7 +88,8 @@ exports.fetchArticleById = async (client, id) => {
       ast.viewcountmin,
       ast.sharecountmin,
       ast.emailcountmin,
-      ast.revisioncount
+      ast.revisioncount,
+      ast.tags
     FROM nyt.articles AS a
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
@@ -718,6 +719,7 @@ const articleFromStats = (row) => {
   return {
     ...row,
     id: idFromUri(row.uri),
+    tags: row.tags ? row.tags.split("||") : null,
     headlineCount: parseInt(row.headlinecount, 10),
     frontPagePeriods: parseInt(row.periods, 10),
     viewRankMin: parseInt(row.viewcountmin, 10),

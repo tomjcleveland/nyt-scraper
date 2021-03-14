@@ -84,6 +84,18 @@
         <% }) %>
       </ul>
     </div>
+    <% if (article.tags) { %>
+      <div class="card shadow-sm mt-4">
+        <div class="card-body">
+          <h4 class="card-title mb-0">Tags</h4>
+        </div>
+        <ul class="list-group list-group-flush">
+          <% article.tags.forEach((tag) => { %>
+            <li class="list-group-item"><%= tag %></li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
   </div>
 </div>
 <div class="row">
