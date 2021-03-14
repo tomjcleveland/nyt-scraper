@@ -96,8 +96,8 @@ const upsertArticleHelper = async (dbClient, id, isUrl) => {
     logger.info(`Fetching article metadata for ${id}`);
     article = await fetchArticleHelper(field, id);
     if (!article) {
-      logger.info();
-      throw new Error(`No article found for ${isUrl ? "URL" : "URI"} ${id}`);
+      logger.info(`No article found for ${isUrl ? "URL" : "URI"} ${id}`);
+      return null;
     }
     article = await addArticleDetails(dbClient, article);
   }

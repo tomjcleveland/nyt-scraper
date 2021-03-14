@@ -134,19 +134,6 @@ const takeHeadlineSnapshot = async () => {
   }
 };
 
-const updateArticleData = async () => {
-  const dbClient = await newDBClient();
-  const articles = await fetchLatestArticles(dbClient);
-  for (let article of articles) {
-    try {
-      await upsertArticleByUri(dbClient, article.uri);
-    } catch (err) {
-      logger.error(`Failed to upsert ${article.headlines[0].headline}`, err);
-    }
-  }
-  dbClient.end();
-};
-
 takeHeadlineSnapshot();
 
 // updateArticleData();
