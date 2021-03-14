@@ -173,10 +173,18 @@ const renderPage = (req, res, path, vars) => {
   app.get("/articles/:id", async (req, res) => {
     const uri = `nyt://article/${req.params.id}`;
     const index = parseInt(req.query.rev, 10) || 0;
+    if (index < 0) {
+      res.redirect(req.path);
+      return;
+    }
     const article = await fetchArticleById(dbClient, uri);
-    const diffInfo = await fetchDiff(dbClient, uri, index);
     if (!article) {
       res.sendStatus(404);
+      return;
+    }
+    const diffInfo = await fetchDiff(dbClient, uri, index);
+    if (diffInfo.noSuchRevision) {
+      res.redirect(req.path);
       return;
     }
     renderPage(req, res, "pages/article", { article, diffInfo });

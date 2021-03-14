@@ -112,14 +112,17 @@ exports.fetchArticleById = async (client, id) => {
 };
 
 exports.fetchDiff = async (client, uri, index) => {
+  const currIndex = index || 0;
   const query = `
     SELECT body, created FROM nyt.articlerevisions
     WHERE uri=$1 ORDER BY created DESC`;
   const res = await client.query(query, [uri]);
   if (!res.rows || res.rows.length < 2) {
     return null;
+  } else if (res.rows.length < 2 + currIndex) {
+    return { noSuchRevision: true };
   }
-  const currIndex = index || 0;
+
   const revisedAt = res.rows[currIndex].created;
   const patch = Diff.createPatch(
     dayjs(revisedAt).format("MMMM D, YYYY [at] h:mm a"),
