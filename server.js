@@ -17,7 +17,12 @@ const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
 const { idFromUri } = require("./utils");
+const Sentry = require("@sentry/node");
+const sentryInit = require("./sentry");
+
+sentryInit();
 const app = express();
+app.use(Sentry.Handlers.requestHandler());
 app.set("view engine", "ejs");
 app.locals = getExpressLocals();
 const port = 3000;
