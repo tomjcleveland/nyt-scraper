@@ -68,8 +68,8 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
 exports.fetchArticleById = async (client, id) => {
   const query = `
     SELECT
-      h.uri AS id,
-      h.headline,
+      a.uri AS id,
+      a.uri,
       a.weburl,
       a.abstract,
       a.published,
@@ -83,27 +83,31 @@ exports.fetchArticleById = async (client, id) => {
       a.section,
       a.subsection,
       a.tone,
-      MIN(h.retrieved) AS firstseen,
-      COUNT(*),
-      MAX(retrieved) AS lastRetrieved,
-      MIN(ast.periods) AS periods,
-      MIN(ast.headlinecount) AS headlinecount,
-      MIN(ast.viewcountmin) AS viewcountmin,
-      MIN(ast.sharecountmin) AS sharecountmin,
-      MIN(ast.emailcountmin) AS emailcountmin,
-      MIN(ast.revisioncount) AS revisioncount
+      ast.periods,
+      ast.headlinecount,
+      ast.viewcountmin,
+      ast.sharecountmin,
+      ast.emailcountmin,
+      ast.revisioncount
     FROM nyt.articles AS a
-      LEFT JOIN nyt.headlines AS h ON a.uri=h.uri
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   `;
   const res = await client.query(query, [id]);
   if (res.rows.length === 0) {
     return null;
+  } else if (res.rows.length > 1) {
+    throw new Error(`fetchArticleById returned ${res.rows.length} rows`);
   }
-  const article = await articleFromheadlines(client, id, res.rows);
-  return articleFromStats(article);
+  const timeSeries = await fetchArticleTimeSeries(client, id);
+  const headlines = [
+    ...new Set(timeSeries.map((p) => p.headline).filter((h) => !!h)),
+  ];
+  return {
+    ...articleFromStats(res.rows[0]),
+    headlines,
+    timeSeries,
+  };
 };
 
 exports.fetchDiff = async (client, uri, index) => {
@@ -576,36 +580,6 @@ exports.fetchStats = async (client) => {
   return res.rows.map((a) => articleFromStats(a));
 };
 
-/**
- * Fetches current most-viewed articles, with time series
- * @param {*} client
- * @returns {Article[]}
- */
-exports.fetchMostViewedArticles = async (client) => {
-  const query = `
-    WITH latestranked AS (
-      SELECT uri, rank FROM nyt.viewrankings WHERE date_trunc('hour', created)=date_trunc('hour', (SELECT MAX(created) FROM nyt.viewrankings))
-    )
-    SELECT
-      h.uri AS id,
-      latestranked.rank AS rank,
-      h.headline,
-      a.weburl,
-      a.abstract,
-      a.imageurl,
-      a.headline AS canonicalheadline,
-      a.printheadline AS printheadline,
-      COUNT(*),
-      MAX(retrieved) AS lastRetrieved
-    FROM nyt.headlines AS h
-      JOIN nyt.articles AS a ON h.uri=a.uri
-      INNER JOIN latestranked ON latestranked.uri=a.uri
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
-    ORDER BY 4 DESC`;
-  const res = await client.query(query);
-  return articlesFromHeadlines(client, res.rows);
-};
-
 exports.fetchMostXArticles = async (client, allTime, field) => {
   let intervalClause = `WHERE a.published > now() - interval '7 days'`;
   if (allTime) {
@@ -739,43 +713,6 @@ exports.fetchDeletedArticles = async (client, allTime) => {
   return res.rows.map((a, i) => ({ ...articleFromStats(a), rank: i + 1 }));
 };
 
-/**
- * Create many Articles from headlines data
- * @param {*} dbClient
- * @param {*} id
- * @param {*} currHeadlines
- * @param {boolean} [skipTimeSeries] If true, skip fetching time series data
- * @returns {Article[]}
- */
-const articlesFromHeadlines = async (
-  dbClient,
-  headlineRows,
-  skipTimeSeries
-) => {
-  const articlesById = headlineRows.reduce((acc, curr) => {
-    acc[curr.id] = acc[curr.id] || [];
-    acc[curr.id].push({
-      ...curr,
-      headline: curr.headline,
-      count: parseInt(curr.count, 10),
-      retrieved: curr.lastRetrieved,
-    });
-    return acc;
-  }, {});
-
-  const results = Object.keys(articlesById).map(async (id) => {
-    const currHeadlines = articlesById[id];
-    return await articleFromheadlines(
-      dbClient,
-      id,
-      currHeadlines,
-      skipTimeSeries
-    );
-  });
-
-  return Promise.all(results);
-};
-
 const articleFromStats = (row) => {
   const url = row.weburl || row.url;
   return {
@@ -789,108 +726,5 @@ const articleFromStats = (row) => {
     revisioncount: parseInt(row.revisioncount, 10),
     imageUrl: row.imageurl || row.imageUrl,
     section: row.section || (url ? url.split("/")[6] : null),
-  };
-};
-
-/**
- * Create a Article object from headline data
- * @param {*} dbClient
- * @param {string} id
- * @param {*} currHeadlines
- * @param {boolean} [skipTimeSeries] If true, skip fetching time series data
- * @returns {Article}
- */
-const articleFromheadlines = async (
-  dbClient,
-  id,
-  currHeadlines,
-  skipTimeSeries
-) => {
-  const url = currHeadlines[0].weburl;
-  const rank = parseInt(currHeadlines[0].rank, 10);
-  const abstract = currHeadlines[0].abstract;
-  const imageUrl = currHeadlines[0].imageurl;
-  const canonicalheadline = currHeadlines[0].canonicalheadline;
-  const printheadline = currHeadlines[0].printheadline;
-  const periods = currHeadlines[0].periods;
-  const viewcountmin = currHeadlines[0].viewcountmin;
-  const sharecountmin = currHeadlines[0].sharecountmin;
-  const emailcountmin = currHeadlines[0].emailcountmin;
-  const headlinecount = currHeadlines[0].headlinecount;
-  const revisioncount = currHeadlines[0].revisioncount;
-  const published = currHeadlines[0].published;
-  const wordcount = currHeadlines[0].wordcount;
-  const deletedat = currHeadlines[0].deletedat;
-  const refreshedat = currHeadlines[0].refreshedat;
-  const desk = currHeadlines[0].desk;
-  const section = currHeadlines[0].section;
-  const subsection = currHeadlines[0].subsection;
-  const tone = currHeadlines[0].tone;
-  const total = currHeadlines.reduce(
-    (acc, curr) => acc + parseInt(curr.count, 10),
-    0
-  );
-  const frontPagePeriods = parseInt(currHeadlines[0].periods, 10);
-  const withPct = currHeadlines
-    .map((currHeadline) => {
-      const newHeadline = {
-        ...currHeadline,
-        pct: Math.round((100 * parseInt(currHeadline.count, 10)) / total),
-      };
-      delete newHeadline.weburl;
-      delete newHeadline.rank;
-      delete newHeadline.abstract;
-      delete newHeadline.imageurl;
-      delete newHeadline.canonicalheadline;
-      delete newHeadline.printheadline;
-      delete newHeadline.periods;
-      delete newHeadline.viewcountmin;
-      delete newHeadline.sharecountmin;
-      delete newHeadline.emailcountmin;
-      delete newHeadline.headlinecount;
-      delete newHeadline.wordcount;
-      delete newHeadline.deletedat;
-      delete newHeadline.refreshedat;
-      delete newHeadline.desk;
-      delete newHeadline.section;
-      delete newHeadline.subsection;
-      delete newHeadline.tone;
-      delete newHeadline.revisioncount;
-      return newHeadline;
-    })
-    .sort((a, b) => a.firstseen - b.firstseen);
-
-  // Get time series for article with multiple headlines
-  let timeSeries = null;
-  if (!skipTimeSeries) {
-    timeSeries = await fetchArticleTimeSeries(dbClient, id);
-  }
-
-  return {
-    id: idFromUri(id),
-    uri: id,
-    url,
-    rank,
-    timeSeries,
-    abstract,
-    imageUrl,
-    published,
-    deletedat,
-    refreshedat,
-    revisioncount,
-    desk,
-    section,
-    subsection,
-    tone,
-    canonicalheadline,
-    printheadline,
-    frontPagePeriods,
-    periods,
-    viewcountmin,
-    sharecountmin,
-    emailcountmin,
-    headlinecount,
-    wordcount,
-    headlines: withPct,
   };
 };

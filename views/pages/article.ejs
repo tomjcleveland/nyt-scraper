@@ -73,7 +73,7 @@
         <%- include('../partials/articleStats', { article, extended: true }) %>
       </div>
     </div>
-    <% const allHeadlines = [...new Set([article.canonicalheadline, ...article.headlines.map(h => h.headline).filter(h => !!h)])]; %>
+    <% const allHeadlines = [...new Set([article.canonicalheadline, ...article.headlines])]; %>
     <div class="card shadow-sm mt-4">
       <div class="card-body">
         <h4 class="card-title mb-0">Headlines</h4>

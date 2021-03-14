@@ -2,7 +2,7 @@
   <ol class="mb-0">
     <% article.headlines.forEach((headline, i) => { %>
       <li>
-        <strong style="color: <%- COLORS.FULL[i % COLORS.FULL.length] %>;"><%= headline.headline %></strong> (<%= headline.pct %>%)
+        <strong style="color: <%- COLORS.FULL[i % COLORS.FULL.length] %>;"><%= headline %></strong>
       </li>
     <% }) %>
   </ol>
@@ -15,7 +15,7 @@
   <script>
     (() => {
       const timeSeries = JSON.parse('<%- JSON.stringify(article.timeSeries); %>');
-      const headlines = JSON.parse('<%- JSON.stringify(article.headlines.map((hi) => hi.headline)); %>');
+      const headlines = JSON.parse('<%- JSON.stringify(article.headlines); %>');
       const hasHeadlines = headlines && headlines.length > 0 && !!headlines[0];
       const hasRanks = timeSeries.map(t => t.rank).filter(r => !!r).length !== 0;
 
