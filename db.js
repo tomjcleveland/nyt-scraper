@@ -321,6 +321,26 @@ exports.fetchOverallStats = async (client) => {
     ["Fluff", categoryFluffCount],
   ];
 
+  const frontPageByTagQuery = `
+    SELECT
+      tt.tag,
+      SUM(ast.periods) AS totalperiods
+    FROM nyt.timestags AS tt
+    JOIN nyt.articlestats AS ast
+      ON tt.uri=ast.uri
+    GROUP BY 1
+    ORDER BY 2 DESC
+    LIMIT 20`;
+  const frontPageByTagRes = await client.query(frontPageByTagQuery);
+  const frontPageByTag = [
+    ["Tag", "Front page time"],
+    ...frontPageByTagRes.rows
+      .filter((r) => !r.tag.startsWith("your-feed"))
+      .map((r) => {
+        return [r.tag, parseInt(r.totalperiods, 10)];
+      }),
+  ];
+
   const abEffectsQuery = `
     SELECT
       headlinecount,
@@ -397,6 +417,7 @@ exports.fetchOverallStats = async (client) => {
     abEffects,
     frontPageBySection,
     frontPageByCategory,
+    frontPageByTag,
     newsCategories: {
       news: NEWS_CATEGORIES,
       fluff: frontPageBySectionRes.rows
