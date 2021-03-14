@@ -14,10 +14,10 @@ const sentryInit = require("./sentry");
 const Sentry = require("@sentry/node");
 
 // How long to sleep between GraphQL requests
-const SLEEP_INTERVAL = 6 * 1000;
+const SLEEP_INTERVAL = 3 * 1000;
 
 // How many articles to refresh when this script is run
-const ARTICLES_PER_RUN = 30;
+const ARTICLES_PER_RUN = 60;
 
 sentryInit();
 
