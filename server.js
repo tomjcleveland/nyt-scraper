@@ -188,7 +188,7 @@ const renderPage = (req, res, path, vars) => {
       return;
     }
     const diffInfo = await fetchDiff(dbClient, uri, index);
-    if (diffInfo.noSuchRevision) {
+    if (diffInfo?.noSuchRevision) {
       res.redirect(req.path);
       return;
     }
