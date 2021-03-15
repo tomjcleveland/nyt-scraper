@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 # Fetch latest code
-git reset --hard HEAD
+git reset --hard origin/main
 git pull
 
 # Install npm packages
