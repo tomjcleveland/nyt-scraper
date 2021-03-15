@@ -344,6 +344,7 @@ exports.fetchOverallStats = async (client) => {
     ["Tag", "Front page time"],
     ...frontPageByTagRes.rows
       .filter((r) => !r.tag.startsWith("your-feed"))
+      // .filter((r) => ["Democratic Party", "Republican Party"].includes(r.tag))
       .map((r) => {
         return [r.tag, parseInt(r.totalperiods, 10)];
       }),

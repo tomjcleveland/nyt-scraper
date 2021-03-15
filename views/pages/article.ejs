@@ -30,7 +30,7 @@
           <p class="mt-0"><span class="badge bg-secondary"><%= article.wordcount.toLocaleString() %> words</span></p>
         <% } %>
         <p class="mt-0"><%= article.abstract %></p>
-        <p><a target="_blank" rel="noopener noreferer" href="<%= article.url %>">Read original article</a> (<a rel="noopener noreferer" href="<%= archiveUrl(article.url) %>" target="_blank">archived</a>)</p>
+        <p><a target="_blank" rel="noopener noreferer" href="<%= article.weburl %>">Read original article</a> (<a rel="noopener noreferer" href="<%= archiveUrl(article.weburl) %>" target="_blank">archived</a>)</p>
         <% if (article.refreshedat) { %>
           <p class="mb-0 text-muted"><small style="font-size: 12px;">Refreshed on <strong><%= dayjs(article.refreshedat).format('MMMM D, YYYY [at] h:mm:ss a') %></strong></small></p>
         <% } %>
