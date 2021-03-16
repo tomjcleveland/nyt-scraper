@@ -126,10 +126,10 @@ const articleFromResponse = (respJson) => {
     subsection: rawArticle.subsection?.name,
     tone: rawArticle.tone,
     tags: rawArticle.timesTags
-      .map((tt) => tt.displayName || tt.vernacular)
+      .map((tt) => tt?.displayName || tt?.vernacular)
       .filter((tt) => !!tt),
     bylines: rawArticle.bylines.map((bl) => {
-      return { ...bl, url: bl.bioUrl || bl.url };
+      return { ...bl, url: bl?.bioUrl || bl?.url };
     }),
     body: rawArticle.body.content
       .map((c) =>
