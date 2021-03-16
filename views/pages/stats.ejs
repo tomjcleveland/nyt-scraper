@@ -73,6 +73,13 @@
         <div class="aspect-contents" id="front-page-by-tag-chart"></div>
       </div>
     </div>
+    <div class="col-md-6">
+      <h3 id="front-page-by-tone" class="mt-4">Front page time, by tone</h3>
+      <p>The front page time allotted to each tone.</p>
+      <div class="aspect aspect-3-2 shadow-sm">
+        <div class="aspect-contents" id="front-page-by-tone-chart"></div>
+      </div>
+    </div>
   </div>
   <script>
     const {
@@ -83,7 +90,8 @@
       abEffects,
       frontPageBySection,
       frontPageByCategory,
-      frontPageByTag
+      frontPageByTag,
+      frontPageByTone
     } = JSON.parse('<%- JSON.stringify(stats) %>');
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
@@ -207,6 +215,16 @@
         }
       };
       chartFrontPageByTag.draw(dataFrontPageByTag, optionsFrontPageByTag);
+
+      const dataFrontPageByTone = new google.visualization.arrayToDataTable(frontPageByTone);
+      const chartFrontPageByTone = new google.visualization.PieChart(document.getElementById('front-page-by-tone-chart'));
+      const optionsFrontPageByTone = {
+        chartArea: {
+          height: '80%',
+          width: '100%'
+        }
+      };
+      chartFrontPageByTone.draw(dataFrontPageByTone, optionsFrontPageByTone);
     }
   </script>
 <%- include('../partials/footer') %>

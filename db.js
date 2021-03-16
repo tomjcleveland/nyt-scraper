@@ -350,6 +350,24 @@ exports.fetchOverallStats = async (client) => {
       }),
   ];
 
+  const frontPageByToneQuery = `
+    SELECT
+      COALESCE(a.tone, 'NO_TONE_SET') AS tone,
+      SUM(ast.periods) AS totalperiods
+    FROM nyt.articles AS a
+    JOIN nyt.articlestats AS ast
+      ON a.uri=ast.uri
+    GROUP BY 1
+    ORDER BY 2 DESC
+    LIMIT 20`;
+  const frontPageByToneRes = await client.query(frontPageByToneQuery);
+  const frontPageByTone = [
+    ["Tone", "Front page time"],
+    ...frontPageByToneRes.rows.map((r) => {
+      return [r.tone, parseInt(r.totalperiods, 10)];
+    }),
+  ];
+
   const abEffectsQuery = `
     SELECT
       headlinecount,
@@ -427,6 +445,7 @@ exports.fetchOverallStats = async (client) => {
     frontPageBySection,
     frontPageByCategory,
     frontPageByTag,
+    frontPageByTone,
     newsCategories: {
       news: NEWS_CATEGORIES,
       fluff: frontPageBySectionRes.rows
