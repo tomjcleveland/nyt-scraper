@@ -68,6 +68,7 @@ DROP TRIGGER IF EXISTS update_headlines_transaction_columns ON headlines;
 CREATE TRIGGER update_headlines_transaction_columns BEFORE UPDATE ON headlines FOR EACH ROW EXECUTE PROCEDURE update_transaction_columns();
 
 CREATE INDEX headlines_search_idx ON headlines USING GIN (to_tsvector('english', headline));
+CREATE INDEX headlines_retrieved ON headlines (retrieved);
 
 -- CREATE TRIGGER headlines_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
 -- ON headlines

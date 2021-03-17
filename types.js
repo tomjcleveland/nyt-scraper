@@ -37,3 +37,10 @@
  * @property {number} count The number of observations of this headline during the period
  * @property {number} total The total number of headline observations during this period
  */
+
+exports.TONE = {
+  FEATURE: "FEATURE",
+  NEWS: "NEWS",
+  OPINION: "OPINION",
+  NO_TONE_SET: "NO_TONE_SET",
+};

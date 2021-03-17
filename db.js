@@ -566,17 +566,23 @@ exports.fetchCurrentArticles = async (client) => {
       a.published,
       a.headline AS canonicalheadline,
       a.printheadline AS printheadline,
+      a.tone,
       ast.viewcountmin,
       ast.sharecountmin,
       ast.emailcountmin,
       ast.headlinecount,
+      ast.revisioncount,
       ast.periods
     FROM latest
       JOIN nyt.articles AS a ON latest.uri=a.uri
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     ORDER BY 5 ASC`;
   const res = await client.query(query);
-  return res.rows.map((a) => articleFromStats(a));
+  const articles = res.rows.map((a) => articleFromStats(a));
+  return articles.reduce((prev, curr) => {
+    prev[curr.tone] = [...(prev[curr.tone] || []), curr];
+    return prev;
+  }, {});
 };
 
 /**

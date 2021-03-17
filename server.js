@@ -13,6 +13,7 @@ const {
   fetchDeletedArticles,
   fetchDiff,
 } = require("./db");
+const { TONE } = require("./types");
 const { getExpressLocals, COLORS } = require("./helpers");
 const { POPTYPE } = require("./enum");
 const logger = require("./logger");
@@ -41,8 +42,8 @@ const renderPage = (req, res, path, vars) => {
   const title =
     vars?.title ||
     (vars?.article
-      ? `${vars.article.canonicalheadline} | NYT Headlines`
-      : "NYT Headlines");
+      ? `${vars.article.canonicalheadline} | NYT Tracker`
+      : "NYT Tracker");
   const description =
     vars?.description ||
     (vars?.article
@@ -71,18 +72,22 @@ const renderPage = (req, res, path, vars) => {
   app.use(express.static("public"));
 
   app.get("/", async (req, res) => {
-    const articles = await fetchRecentPopularityData(dbClient, POPTYPE.VIEWED);
-    renderPage(req, res, "pages/mostviewed", {
-      articles,
-      title: "Most viewed articles",
-      description: "The 20 most-viewed New York Times articles, right now.",
-    });
-  });
-
-  app.get("/frontpage", async (req, res) => {
-    const articles = await fetchCurrentArticles(dbClient);
+    const tone = TONE[req.query.tone];
+    const articlesByTone = await fetchCurrentArticles(dbClient);
+    let articles = Object.values(articlesByTone).flat();
+    if (tone) {
+      articles = articlesByTone[tone];
+    }
+    const toneCounts = Object.keys(articlesByTone).reduce((prev, curr) => {
+      prev[curr] = articlesByTone[curr].length;
+      return prev;
+    }, {});
     renderPage(req, res, "pages/frontpage", {
       articles,
+      tone,
+      toneCounts,
+      title: "NYT Tracker | Front page",
+      description: "The current front page of the New York Times.",
     });
   });
 
@@ -162,15 +167,15 @@ const renderPage = (req, res, path, vars) => {
     renderPage(req, res, "pages/results", {
       query: req.query.q,
       results,
-      title: `Results for '${req.query.q}' | NYT Headlines`,
-      description: `All articles in the NYT Headlines database for '${req.query.q}'`,
+      title: `Results for '${req.query.q}' | NYT Tracker`,
+      description: `All articles in the NYT Tracker database for '${req.query.q}'`,
     });
   });
 
   app.get("/about", async (req, res) => {
     const results = await queryHeadlines(dbClient, req.query.q);
     renderPage(req, res, "pages/about", {
-      title: "About NYT Headlines",
+      title: "About NYT Tracker",
       description: "We track the front page of the New York Times.",
     });
   });
@@ -199,7 +204,7 @@ const renderPage = (req, res, path, vars) => {
     const stats = await fetchOverallStats(dbClient);
     renderPage(req, res, "pages/stats", {
       stats,
-      title: "Statistics | NYT Headlines",
+      title: "Statistics | NYT Tracker",
       description: "Overall statistics for New York Times articles.",
     });
   });
@@ -209,7 +214,7 @@ const renderPage = (req, res, path, vars) => {
     const articles = await fetchDeletedArticles(dbClient, allTime);
     renderPage(req, res, "pages/deleted", {
       articles,
-      title: "Deleted articles | NYT Headlines",
+      title: "Deleted articles | NYT Tracker",
       description: "Articles that have deleted from the NYT's public API.",
     });
   });

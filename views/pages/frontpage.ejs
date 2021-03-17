@@ -1,6 +1,12 @@
 <%- include('../partials/header') %>
-    <h2 style="margin-bottom: 0;">Front page</h2>
-    <p><%= articles.length %> headlines from the current the NYT homepage.</p>
+    <h2>Front page</h2>
+    <p>The current front page of the New York Times.</p>
+    <div class="btn-group d-flex mb-4" role="group" aria-label="Basic outlined example">
+      <a href="<%= req.path %>" type="button" class="btn btn-<%= tone ? 'outline-secondary' : 'secondary' %>">All (<%= Object.values(toneCounts).reduce((p, c) => p + c, 0) %>)</a>
+      <a href="<%= req.path %>?tone=NEWS" type="button" class="btn btn-<%= tone === 'NEWS' ? 'secondary' : 'outline-secondary' %>">News (<%= toneCounts.NEWS %>)</a>
+      <a href="<%= req.path %>?tone=OPINION" type="button" class="btn btn-<%= tone === 'OPINION' ? 'secondary' : 'outline-secondary' %>">Opinion (<%= toneCounts.OPINION %>)</a>
+      <a href="<%= req.path %>?tone=FEATURE" type="button" class="btn btn-<%= tone === 'FEATURE' ? 'secondary' : 'outline-secondary' %>">Features (<%= toneCounts.FEATURE %>)</a>
+    </div>
     <% articles.forEach((article) => { %>
       <%- include('../partials/articleCard', { article }) %>
     <% }); %>

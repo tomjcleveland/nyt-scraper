@@ -21,7 +21,7 @@
     <meta property="og:url" content="<%= canonicalUrl %>" />
     <meta property="og:image" content="<%= imageUrl %>" />
     <meta property="og:description" content="<%= description %>" />
-    <meta property="og:site_name" content="NYT Headlines" />
+    <meta property="og:site_name" content="NYT Tracker" />
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@tomjcleveland">
@@ -92,12 +92,15 @@
 
     <nav class="navbar navbar-expand-xl navbar-light bg-light">
       <div class="container">
-        <a class="navbar-brand" href="/"><strong>NYT Headlines</strong></a>
+        <a class="navbar-brand" href="/"><strong>NYT Tracker</strong></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="me-2 nav-item">
+              <a class="nav-link<%= path === '/' ? ' active' : '' %>" aria-current="page" href="/">Front page</a>
+            </li>
             <li class="me-2 nav-item dropdown">
               <a class="nav-link dropdown-toggle<%= path.startsWith('/top') ? ' active' : '' %>" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Top...
@@ -118,12 +121,10 @@
                 <li><a class="dropdown-item<%= path === '/mostrevisions' ? ' active' : '' %>" href="/mostrevisions">...revised</a></li>
               </ul>
             </li>
-            <li class="me-2 nav-item">
-              <a class="nav-link<%= path === '/frontpage' ? ' active' : '' %>" aria-current="page" href="/frontpage">Front page</a>
-            </li>
-            <li class="me-2 nav-item">
+            
+            <!-- <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/deleted' ? ' active' : '' %>" aria-current="page" href="/deleted">Deleted</a>
-            </li>
+            </li> -->
             <li class="me-2 nav-item">
               <a class="nav-link<%= path === '/stats' ? ' active' : '' %>" aria-current="page" href="/stats">Stats</a>
             </li>

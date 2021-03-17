@@ -1,5 +1,5 @@
 <%- include('../partials/header') %>
-    <h2 style="margin-bottom: 0;">Top headlines</h2>
+    <h2>Top headlines</h2>
     <p>The 20 most-viewed headlines right now.</p>
     <% articles.sort((a, b) => a.rank - b.rank).forEach((article) => { %>
       <%- include('../partials/articleSummary', { article }) %>
