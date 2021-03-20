@@ -443,3 +443,28 @@ WHERE p.created=ar.created
 AND p.uri=ar.uri
 AND ar.uri='nyt://article/d7c0e386-157e-5b9f-8e93-b875919fc13c';
 ```
+
+```sql
+WITH topten AS (
+  SELECT
+    ast.uri,
+    ast.viewcountmin,
+    ast.sharecountmin,
+    ast.emailcountmin,
+    ast.headlinecount,
+    ast.revisioncount,
+    ast.periods
+  FROM nyt.articlestats AS ast
+    JOIN nyt.articles AS a ON a.uri=ast.uri
+  WHERE periods > 0
+  ORDER BY periods ASC
+  LIMIT 20
+)
+SELECT
+  a.uri,
+  a.headline AS canonicalheadline,
+  tt.periods
+FROM nyt.articles AS a
+  INNER JOIN topten AS tt ON tt.uri=a.uri
+ORDER BY tt.periods ASC
+```
