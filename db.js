@@ -514,6 +514,7 @@ exports.queryHeadlines = async (client, searchQuery) => {
     return [];
   }
   const tsQuery = searchQuery
+    .trim()
     .split(" ")
     .map((w) => `${w}:*`)
     .join(" & ");
