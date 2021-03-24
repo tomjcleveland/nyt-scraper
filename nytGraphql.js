@@ -128,9 +128,13 @@ const articleFromResponse = (respJson) => {
     tags: rawArticle.timesTags
       .map((tt) => tt?.displayName || tt?.vernacular)
       .filter((tt) => !!tt),
-    bylines: rawArticle.bylines.map((bl) => {
-      return { ...bl, url: bl?.bioUrl || bl?.url };
-    }),
+    creators: rawArticle.bylines
+      .map((bl) => {
+        return bl.creators.map((c) => {
+          return { ...c, url: c?.bioUrl || c?.url };
+        });
+      })
+      .flat(),
     body: rawArticle.body.content
       .map((c) =>
         c.content

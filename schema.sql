@@ -202,6 +202,26 @@ CREATE TABLE timestags
     UNIQUE (uri, tag)
 );
 
+-- Creators
+
+CREATE TABLE creators
+(
+    uri TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
+);
+
+-- Articles <> Creators
+
+CREATE TABLE articlescreators
+(
+    articleuri TEXT NOT NULL,
+    creatoruri TEXT NOT NULL,
+    created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    UNIQUE (articleuri, creatoruri)
+);
+
 -- Hacker News Front Page
 
 CREATE TABLE hackernewstopstories

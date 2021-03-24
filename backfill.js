@@ -7,6 +7,8 @@ const {
   upsertRevision,
   dedupeRevisions,
   upsertTimesTag,
+  upsertCreator,
+  upsertArticleCreatorMapping,
 } = require("./db");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
@@ -25,6 +27,10 @@ const refreshArticle = async (dbClient, uri) => {
   const refreshedArticle = await fetchArticleByUri(uri);
   if (refreshedArticle) {
     const existingArticle = await fetchArticleDetails(dbClient, uri);
+    for (let creator of refreshedArticle.creators) {
+      await upsertCreator(dbClient, creator);
+      await upsertArticleCreatorMapping(dbClient, uri, creator.uri);
+    }
     await addArticleDetails(dbClient, {
       ...existingArticle,
       ...refreshedArticle,

@@ -65,6 +65,26 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
   return res.rows[0] || null;
 };
 
+exports.upsertCreator = async (client, creator) => {
+  const query = `
+    INSERT INTO nyt.creators (uri,name,url) VALUES ($1,$2,$3)
+    ON CONFLICT (uri) DO UPDATE SET
+      name=EXCLUDED.name,
+      url=EXCLUDED.url`;
+  await client.query(query, [creator.uri, creator.displayName, creator.url]);
+};
+
+exports.upsertArticleCreatorMapping = async (
+  client,
+  articleUri,
+  creatorUri
+) => {
+  const query = `
+    INSERT INTO nyt.articlescreators (articleuri,creatoruri) VALUES ($1,$2)
+    ON CONFLICT DO NOTHING`;
+  await client.query(query, [articleUri, creatorUri]);
+};
+
 exports.fetchArticleById = async (client, id) => {
   const query = `
     SELECT
