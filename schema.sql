@@ -202,6 +202,16 @@ CREATE TABLE timestags
     UNIQUE (uri, tag)
 );
 
+-- Hacker News Front Page
+
+CREATE TABLE hackernewstopstories
+(
+    itemid INTEGER NOT NULL,
+    rank INTEGER NOT NULL,
+    observed TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    UNIQUE (itemid, observed)
+);
+
 ------------------------
 -- MATERIALIZED VIEWS --
 ------------------------

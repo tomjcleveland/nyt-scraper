@@ -509,6 +509,15 @@ exports.fetchArticlePopularitySeries = async (client, uri) => {
   return res.rows;
 };
 
+exports.addHackerNewsTopStories = async (client, topItemIds) => {
+  const query = `INSERT INTO nyt.hackernewstopstories (itemid,rank,observed) VALUES ($1,$2,$3)`;
+  for (let i = 0; i < topItemIds.length; i++) {
+    const observed = new Date();
+    const itemId = topItemIds[i];
+    await client.query(query, [itemId, i, observed]);
+  }
+};
+
 exports.queryHeadlines = async (client, searchQuery) => {
   if (!searchQuery) {
     return [];
