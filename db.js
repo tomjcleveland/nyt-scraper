@@ -85,6 +85,24 @@ exports.upsertArticleCreatorMapping = async (
   await client.query(query, [articleUri, creatorUri]);
 };
 
+exports.fetchArticleCreators = async (client, articleUri) => {
+  const query = `
+    SELECT
+      c.uri,
+      c.name,
+      c.url
+    FROM nyt.creators AS c
+      JOIN nyt.articlescreators AS ac ON c.uri=ac.creatoruri
+    WHERE ac.articleuri=$1`;
+  const res = await client.query(query, [articleUri]);
+  return res.rows;
+};
+
+exports.addNewPageDuration = async (client, seconds) => {
+  const query = `INSERT INTO nyt.hackernewsnewpageduration (seconds) VALUES ($1)`;
+  await client.query(query, [seconds]);
+};
+
 exports.fetchArticleById = async (client, id) => {
   const query = `
     SELECT

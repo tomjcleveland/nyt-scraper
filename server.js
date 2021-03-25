@@ -12,6 +12,7 @@ const {
   fetchLatestDiff,
   fetchDeletedArticles,
   fetchDiff,
+  fetchArticleCreators,
 } = require("./db");
 const { TONE } = require("./types");
 const { getExpressLocals, COLORS } = require("./helpers");
@@ -192,12 +193,13 @@ const renderPage = (req, res, path, vars) => {
       res.sendStatus(404);
       return;
     }
+    const creators = await fetchArticleCreators(dbClient, uri);
     const diffInfo = await fetchDiff(dbClient, uri, index);
     if (diffInfo?.noSuchRevision) {
       res.redirect(req.path);
       return;
     }
-    renderPage(req, res, "pages/article", { article, diffInfo });
+    renderPage(req, res, "pages/article", { article, creators, diffInfo });
   });
 
   app.get("/stats", async (req, res) => {

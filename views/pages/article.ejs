@@ -26,6 +26,13 @@
         <img style="width: 100%; margin-bottom: 20px;" src="<%= article.imageUrl %>">
       <% } %>
       <div class="card-body pt-0">
+        <% if (creators &&  creators.length > 0) { %>
+          <p>By
+            <% for (let creator of creators) { %>
+              <a href="<%= creator.url %>"><%= creator.name %></a>
+            <% } %>
+          </p>
+        <% } %>
         <% if (article.wordcount) { %>
           <p class="mt-0"><span class="badge bg-secondary"><%= article.wordcount.toLocaleString() %> words</span></p>
         <% } %>

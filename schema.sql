@@ -216,8 +216,8 @@ CREATE TABLE creators
 
 CREATE TABLE articlescreators
 (
-    articleuri TEXT NOT NULL,
-    creatoruri TEXT NOT NULL,
+    articleuri TEXT NOT NULL REFERENCES articles (uri),
+    creatoruri TEXT NOT NULL REFERENCES creators (uri),
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     UNIQUE (articleuri, creatoruri)
 );
@@ -230,6 +230,12 @@ CREATE TABLE hackernewstopstories
     rank INTEGER NOT NULL,
     observed TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     UNIQUE (itemid, observed)
+);
+
+CREATE TABLE hackernewsnewpageduration
+(
+    seconds INTEGER NOT NULL,
+    observed TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
 
 ------------------------
