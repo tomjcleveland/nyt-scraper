@@ -209,6 +209,7 @@ CREATE TABLE creators
     uri TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     url TEXT,
+    image TEXT,
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
 

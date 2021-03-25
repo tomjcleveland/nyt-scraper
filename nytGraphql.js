@@ -30,12 +30,32 @@ const getArticleQuery = (uri) => {
           bioUrl
           displayName
           description
+          promotionalMedia {
+            ... on Image {
+              crops(renditionNames: ["blog480"]) {
+                renditions {
+                  url
+                  name
+                }
+              }
+            }
+          }
         }
         ... on Organization {
           uri
           url
           displayName
           description
+          promotionalMedia {
+            ... on Image {
+              crops(renditionNames: ["blog480"]) {
+                renditions {
+                  url
+                  name
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -131,7 +151,11 @@ const articleFromResponse = (respJson) => {
     creators: rawArticle.bylines
       .map((bl) => {
         return bl.creators.map((c) => {
-          return { ...c, url: c?.bioUrl || c?.url };
+          return {
+            ...c,
+            url: c?.bioUrl || c?.url,
+            image: c?.promotionalMedia?.crops?.[0]?.renditions?.[0]?.url,
+          };
         });
       })
       .flat(),

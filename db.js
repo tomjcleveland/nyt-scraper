@@ -67,11 +67,17 @@ exports.fetchArticleDetailsByUrl = async (client, url) => {
 
 exports.upsertCreator = async (client, creator) => {
   const query = `
-    INSERT INTO nyt.creators (uri,name,url) VALUES ($1,$2,$3)
+    INSERT INTO nyt.creators (uri,name,url,image) VALUES ($1,$2,$3,$4)
     ON CONFLICT (uri) DO UPDATE SET
       name=EXCLUDED.name,
-      url=EXCLUDED.url`;
-  await client.query(query, [creator.uri, creator.displayName, creator.url]);
+      url=EXCLUDED.url,
+      image=EXCLUDED.image`;
+  await client.query(query, [
+    creator.uri,
+    creator.displayName,
+    creator.url,
+    creator.image,
+  ]);
 };
 
 exports.upsertArticleCreatorMapping = async (
