@@ -1,7 +1,6 @@
 const fetch = require("node-fetch");
-const Sentry = require("@sentry/node");
 const logger = require("./logger");
-const sentryInit = require("./sentry");
+const { sentryInit, captureException } = require("./sentry");
 const {
   addHackerNewsTopStories,
   newDBClient,
@@ -51,7 +50,7 @@ const fetchNewPageDuration = async () => {
       `Current new page duration: ${currDuration.toLocaleString()} seconds`
     );
   } catch (e) {
-    Sentry.captureException(e);
+    captureException(e);
     logger.error(e);
   } finally {
     dbClient.end();

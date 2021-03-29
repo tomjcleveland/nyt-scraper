@@ -7,10 +7,9 @@ const {
   addArticleDetails,
   fetchLatestArticles,
 } = require("./db");
-const Sentry = require("@sentry/node");
 const UserAgent = require("user-agents");
 const logger = require("./logger");
-const sentryInit = require("./sentry");
+const { sentryInit, captureException } = require("./sentry");
 const {
   fetchArticleByUri,
   fetchArticleByUrl,
@@ -126,7 +125,7 @@ const takeHeadlineSnapshot = async () => {
     }
     logger.info(`Saved ${headlineInfo.length} headlines to DB`);
   } catch (e) {
-    Sentry.captureException(e);
+    captureException(e);
     logger.error(e);
   } finally {
     dbClient.end();

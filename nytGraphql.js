@@ -6,6 +6,15 @@ const getArticleQuery = (uri) => {
   return `{
   article(id: "${uri}") {
     uri
+    url
+    headline {
+      default
+    }
+    printInformation {
+      headline
+    }
+    firstPublished
+    summary
     wordCount
     desk
     section {
@@ -23,7 +32,19 @@ const getArticleQuery = (uri) => {
       vernacular
       displayName
     }
+    promotionalImage {
+      image {
+        url
+        crops(renditionNames: ["blog480"]) {
+          renditions {
+            url
+            name
+          }
+        }
+      }
+    }
     bylines {
+      renderedRepresentation
       creators {
         ... on Person {
           uri
@@ -139,8 +160,10 @@ const articleFromResponse = (respJson) => {
     return null;
   }
   return {
+    ...rawArticle,
     uri: rawArticle.uri,
     wordCount: rawArticle.wordCount,
+    published: new Date(rawArticle.firstPublished),
     desk: rawArticle.desk,
     section: rawArticle.section?.name,
     subsection: rawArticle.subsection?.name,

@@ -40,4 +40,10 @@ exports.getExpressLocals = () => {
   };
 };
 
+exports.sleep = (timeout) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+};
+
 exports.COLORS = COLORS;

@@ -1,4 +1,8 @@
 <% const isExtended = typeof extended !== 'undefined' && extended; %>
+<div class="badge bg-secondary mb-4">
+  <%= article.views ? article.views.toLocaleString() : '< 500' %>
+  views
+</div>
 <% if (article.headlineCount) { %>
   <div class="mb-4">
     <div class="mb-2 d-flex align-items-center">

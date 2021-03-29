@@ -14,6 +14,7 @@ const SEARCH_URL = `${NYT_BASE}/search/v2/articlesearch.json`;
 const SHARES_URL = `${NYT_BASE}/mostpopular/v2/viewed/1.json`;
 const VIEWS_URL = `${NYT_BASE}/mostpopular/v2/shared/1.json`;
 const EMAILS_URL = `${NYT_BASE}/mostpopular/v2/emailed/1.json`;
+const ARCHIVE_URL = `${NYT_BASE}/archive/v1`;
 
 const MAX_RETRIES = 5;
 
@@ -43,6 +44,11 @@ const apiHelper = async (url, params, numRetries) => {
     throw new Error(`Unexpected status code ${resp.status}: ${body}`);
   }
   return await resp.json();
+};
+
+exports.fetchAllArticlesByMonth = async (year, month) => {
+  const respJSON = await apiHelper(`${ARCHIVE_URL}/${year}/${month}.json`);
+  return respJSON.response.docs;
 };
 
 const fetchArticleByUri = async (uri) => {

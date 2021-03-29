@@ -13,6 +13,7 @@ const {
   fetchDeletedArticles,
   fetchDiff,
   fetchArticleCreators,
+  fetchMostPopularCreators,
 } = require("./db");
 const { TONE } = require("./types");
 const { getExpressLocals, COLORS } = require("./helpers");
@@ -20,7 +21,7 @@ const { POPTYPE } = require("./enum");
 const logger = require("./logger");
 const { idFromUri } = require("./utils");
 const Sentry = require("@sentry/node");
-const sentryInit = require("./sentry");
+const { sentryInit } = require("./sentry");
 
 sentryInit();
 const app = express();
@@ -208,6 +209,22 @@ const renderPage = (req, res, path, vars) => {
       stats,
       title: "Statistics | NYT Tracker",
       description: "Overall statistics for New York Times articles.",
+    });
+  });
+
+  app.get("/creators", async (req, res) => {
+    const creators = await fetchMostPopularCreators(dbClient);
+    const creatorsBySection = creators.reduce((prev, curr) => {
+      prev[curr.section] = prev[curr.section] || [];
+      if (prev[curr.section].length < 10) {
+        prev[curr.section] = [...prev[curr.section], curr];
+      }
+      return prev;
+    }, {});
+    renderPage(req, res, "pages/creators", {
+      creatorsBySection,
+      title: "Journalists | NYT Tracker",
+      description: "View top New York Times journalists.",
     });
   });
 

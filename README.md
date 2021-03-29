@@ -468,3 +468,51 @@ FROM nyt.articles AS a
   INNER JOIN topten AS tt ON tt.uri=a.uri
 ORDER BY tt.periods ASC
 ```
+
+```sql
+WITH normalizedviews AS (
+  SELECT
+    uri,
+    date_trunc('hour', created) + date_part('minute', created)::int / 30 * interval '30 minutes' AS period,
+    AVG(COALESCE(rank, 21)) AS rank
+  FROM nyt.viewrankings
+  GROUP BY 1, 2
+),
+viewscores AS (
+  SELECT
+    uri,
+    SUM(21 - rank) AS score
+  FROM normalizedviews
+  GROUP BY 1
+),
+authorsections AS (
+  SELECT
+    ac.creatoruri AS uri,
+    MODE() WITHIN GROUP (ORDER BY a.section) AS section
+  FROM nyt.articlescreators AS ac
+    JOIN nyt.articles AS a ON a.uri=ac.articleuri
+  GROUP BY 1
+),
+authorscores AS (
+  SELECT
+    c.name,
+    ase.section,
+    ROUND(AVG(vs.score)) AS score,
+    COUNT(*) AS articlecount
+  FROM nyt.creators AS c
+    JOIN nyt.articlescreators AS ac
+      ON ac.creatoruri=c.uri
+    JOIN viewscores AS vs ON vs.uri=ac.articleuri
+    JOIN authorsections AS ase
+      ON c.uri=ase.uri
+  GROUP  BY 1, 2
+)
+SELECT
+  name,
+  section,
+  score,
+  articlecount
+FROM authorscores
+WHERE section='opinion'
+ORDER BY 3 DESC
+```

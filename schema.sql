@@ -308,6 +308,42 @@ AS
       STRING_AGG(tt.tag, '||') AS tags
     FROM nyt.timestags AS tt
     GROUP BY 1
+  ),
+  normalizedviews AS (
+  SELECT
+      uri,
+      date_trunc('hour', created) + date_part('minute', created)::int / 30 * interval '30 minutes' AS period,
+      ROUND(AVG(COALESCE(rank, 21))) AS rank
+    FROM nyt.viewrankings
+    GROUP BY 1, 2
+  ),
+  views AS (
+    SELECT
+      uri,
+      SUM(CASE
+        WHEN rank = 1 THEN 4806
+        WHEN rank = 2 THEN 1703
+        WHEN rank = 3 THEN 1325
+        WHEN rank = 4 THEN 1111
+        WHEN rank = 5 THEN 972
+        WHEN rank = 6 THEN 880
+        WHEN rank = 7 THEN 805
+        WHEN rank = 8 THEN 749
+        WHEN rank = 9 THEN 700
+        WHEN rank = 10 THEN 655
+        WHEN rank = 11 THEN 623
+        WHEN rank = 12 THEN 597
+        WHEN rank = 13 THEN 576
+        WHEN rank = 14 THEN 560
+        WHEN rank = 15 THEN 546
+        WHEN rank = 16 THEN 534
+        WHEN rank = 17 THEN 521
+        WHEN rank = 18 THEN 510
+        WHEN rank = 19 THEN 499
+        WHEN rank = 20 THEN 489
+      END) AS views
+    FROM normalizedviews
+    GROUP BY 1
   )
   SELECT
     ac.uri,
@@ -318,12 +354,14 @@ AS
     COUNT(DISTINCT h.headline) AS headlinecount,
     MIN(COALESCE(rc.count, 0)) AS revisioncount,
     MIN(agt.tags) AS tags
+    MIN(v.views) AS views
   FROM
     articlecounts AS ac
       LEFT JOIN nyt.headlines AS h ON ac.uri=h.uri
       LEFT JOIN allcounts AS cc ON cc.uri=ac.uri
       LEFT JOIN revisioncounts AS rc ON rc.uri=ac.uri
       LEFT JOIN aggtags AS agt ON agt.uri=ac.uri
+      LEFT JOIN views AS v ON v.uri=ac.uri
   GROUP BY 1
 WITH DATA;
 

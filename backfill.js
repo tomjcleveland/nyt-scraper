@@ -10,10 +10,11 @@ const {
   upsertCreator,
   upsertArticleCreatorMapping,
 } = require("./db");
+const { fetchAllArticlesByMonth } = require("./nyt");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
-const sentryInit = require("./sentry");
-const Sentry = require("@sentry/node");
+const { sentryInit, captureException } = require("./sentry");
+const { sleep } = require("./helpers");
 
 // How long to sleep between GraphQL requests
 const SLEEP_INTERVAL = 3 * 1000;
@@ -27,15 +28,15 @@ const refreshArticle = async (dbClient, uri) => {
   const refreshedArticle = await fetchArticleByUri(uri);
   if (refreshedArticle) {
     const existingArticle = await fetchArticleDetails(dbClient, uri);
-    for (let creator of refreshedArticle.creators) {
-      await upsertCreator(dbClient, creator);
-      await upsertArticleCreatorMapping(dbClient, uri, creator.uri);
-    }
     await addArticleDetails(dbClient, {
       ...existingArticle,
       ...refreshedArticle,
       refreshedat: new Date(),
     });
+    for (let creator of refreshedArticle.creators) {
+      await upsertCreator(dbClient, creator);
+      await upsertArticleCreatorMapping(dbClient, uri, creator.uri);
+    }
     for (let tag of refreshedArticle.tags) {
       await upsertTimesTag(dbClient, uri, tag);
     }
@@ -54,24 +55,26 @@ const refreshArticle = async (dbClient, uri) => {
   await dedupeRevisions(dbClient, uri);
 };
 
-const sleep = (timeout) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, timeout);
-  });
-};
-
 (async () => {
   const dbClient = await newDBClient();
   try {
-    const uris = await fetchArticlesToRefresh(dbClient, ARTICLES_PER_RUN);
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth() + 1;
+    const articles = await fetchAllArticlesByMonth(year, month);
+    const uris = articles
+      .filter((a) => a.document_type === "article")
+      .map((a) => a.uri);
+    logger.info(`Refreshing ${uris.length} articles for current month`);
     for (let uri of uris) {
       await refreshArticle(dbClient, uri);
       logger.info(`Refreshed article ${uri}`);
       await sleep(SLEEP_INTERVAL);
     }
   } catch (e) {
-    Sentry.captureException(e);
+    captureException(e);
     logger.error(e);
+    logger.error(e.stack);
   } finally {
     dbClient.end();
   }

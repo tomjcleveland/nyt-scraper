@@ -104,6 +104,58 @@ exports.fetchArticleCreators = async (client, articleUri) => {
   return res.rows;
 };
 
+exports.fetchMostPopularCreators = async (client, section) => {
+  let whereClause = "WHERE articlecount > 1";
+  const params = [];
+  if (section) {
+    whereClause += " AND section=$1";
+    params.push(section);
+  }
+  const query = `
+    WITH authorsections AS (
+      SELECT
+        ac.creatoruri AS uri,
+        MODE() WITHIN GROUP (ORDER BY a.section) AS section
+      FROM nyt.articlescreators AS ac
+        JOIN nyt.articles AS a ON a.uri=ac.articleuri
+      GROUP BY 1
+    ),
+    authorscores AS (
+      SELECT
+        c.uri,
+        c.name,
+        c.image,
+        c.url,
+        ase.section,
+        ROUND(AVG(COALESCE(ast.views, 0))) AS avgviews,
+        COUNT(*) AS articlecount
+      FROM nyt.creators AS c
+        JOIN nyt.articlescreators AS ac
+          ON ac.creatoruri=c.uri
+        JOIN nyt.articlestats AS ast ON ast.uri=ac.articleuri
+        JOIN authorsections AS ase
+          ON c.uri=ase.uri
+      GROUP BY 1, 2, 3, 4, 5
+    )
+    SELECT
+      uri,
+      name,
+      image,
+      url,
+      section,
+      avgviews,
+      articlecount
+    FROM authorscores
+    ${whereClause}
+    ORDER BY 6 DESC`;
+  const res = await client.query(query, params);
+  return res.rows.map((r) => ({
+    ...r,
+    articlecount: parseInt(r.articlecount, 10),
+    avgviews: parseInt(r.avgviews, 10),
+  }));
+};
+
 exports.addNewPageDuration = async (client, seconds) => {
   const query = `INSERT INTO nyt.hackernewsnewpageduration (seconds) VALUES ($1)`;
   await client.query(query, [seconds]);
@@ -133,7 +185,8 @@ exports.fetchArticleById = async (client, id) => {
       ast.sharecountmin,
       ast.emailcountmin,
       ast.revisioncount,
-      ast.tags
+      ast.tags,
+      ast.views
     FROM nyt.articles AS a
       JOIN nyt.articlestats AS ast ON ast.uri=a.uri
     WHERE a.uri=$1
@@ -231,6 +284,13 @@ exports.addArticleDetails = async (client, article) => {
     ON CONFLICT ON CONSTRAINT articles_pkey
     DO UPDATE SET
       weburl=EXCLUDED.weburl,
+      abstract=EXCLUDED.abstract,
+      leadparagraph=EXCLUDED.leadparagraph,
+      imageurl=EXCLUDED.imageurl,
+      headline=EXCLUDED.headline,
+      printheadline=EXCLUDED.printheadline,
+      published=EXCLUDED.published,
+      byline=EXCLUDED.byline,
       wordcount=EXCLUDED.wordcount,
       desk=EXCLUDED.desk,
       section=EXCLUDED.section,
@@ -241,24 +301,26 @@ exports.addArticleDetails = async (client, article) => {
   const imageUrl =
     article.multimedia && article.multimedia.length > 0
       ? `https://www.nytimes.com/${article.multimedia[0].url}`
-      : null;
-  await client.query(query, [
+      : article.promotionalImage?.image?.crops?.[0]?.renditions?.[0]?.url;
+  const args = [
     article.uri,
     article.web_url || article.weburl || article.url,
-    article.abstract,
+    article.abstract || article.summary,
     article.lead_paragraph,
     imageUrl,
-    article.headline.main,
-    article.headline.print_headline,
-    article.pub_date ? new Date(article.pub_date) : null,
-    article.byline?.original,
-    article.wordCount,
+    article.headline?.main || article.headline?.default,
+    article.headline?.print_headline || article.printInformation?.headline,
+    article.pub_date ? new Date(article.pub_date) : article.published,
+    article.byline?.original || article.bylines?.[0]?.renderedRepresentation,
+    parseInt(article.wordCount, 10) || parseInt(article.word_count, 10),
     article.refreshedat,
-    article.desk,
-    article.section,
-    article.subsection,
+    article.desk || article.news_desk,
+    article.section || article.section_name,
+    article.subsection || article.subsection?.displayName,
     article.tone,
-  ]);
+  ];
+  console.log(args);
+  await client.query(query, args);
 };
 
 const fetchArticleTimeSeries = async (client, uri) => {
@@ -626,6 +688,7 @@ exports.fetchCurrentArticles = async (client) => {
       ast.emailcountmin,
       ast.headlinecount,
       ast.revisioncount,
+      ast.views,
       ast.periods
     FROM latest
       JOIN nyt.articles AS a ON latest.uri=a.uri
@@ -678,6 +741,7 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
         ast.emailcountmin,
         ast.headlinecount,
         ast.revisioncount,
+        ast.views,
         ast.periods
       FROM nyt.articlestats AS ast
         JOIN nyt.articles AS a ON a.uri=ast.uri
@@ -699,6 +763,7 @@ exports.fetchMostXArticles = async (client, allTime, field) => {
       tt.emailcountmin,
       tt.headlinecount,
       tt.revisioncount,
+      tt.views,
       tt.periods
     FROM nyt.articles AS a
       INNER JOIN topten AS tt ON tt.uri=a.uri
@@ -750,6 +815,7 @@ exports.fetchRecentPopularityData = async (client, type) => {
       s.sharecountmin,
       s.emailcountmin,
       s.headlinecount,
+      s.views,
       s.periods
     FROM latestpopdata AS lpd
       JOIN nyt.articles AS a ON a.uri=lpd.uri
@@ -809,6 +875,7 @@ const articleFromStats = (row) => {
     shareRankMin: parseInt(row.sharecountmin, 10),
     emailRankMin: parseInt(row.emailcountmin, 10),
     revisioncount: parseInt(row.revisioncount, 10),
+    views: parseInt(row.views, 10),
     imageUrl: row.imageurl || row.imageUrl,
     section: row.section || (url ? url.split("/")[6] : null),
   };

@@ -1,9 +1,8 @@
 const { newDBClient, insertPopularityData } = require("./db");
-const Sentry = require("@sentry/node");
 const logger = require("./logger");
 const { fetchPopularArticles, upsertArticleByUri } = require("./nyt");
 const { POPTYPE } = require("./enum");
-const sentryInit = require("./sentry");
+const { sentryInit, captureException } = require("./sentry");
 
 const updatePopularityData = async () => {
   const dbClient = await newDBClient();
@@ -19,7 +18,7 @@ const updatePopularityData = async () => {
       await insertPopularityData(dbClient, type, data);
       logger.info(`Saved popularity data: ${type}`);
     } catch (e) {
-      Sentry.captureException(e);
+      captureException(e);
       logger.error(e);
     }
   }

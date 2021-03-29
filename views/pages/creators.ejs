@@ -1,0 +1,34 @@
+<%- include('../partials/header') %>
+    <h2>Most popular journalists</h2>
+    <p>
+      These are the most popular journalists at the New York Times.
+    </p>
+    <div class="row">
+    <% for (const section in creatorsBySection) { %>
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          <div class="card-body">
+            <h3 style="text-transform: uppercase; letter-spacing: 2px; font-weight: 300;" class="card-text"><%= section %></h3>
+          </div>
+          <ul class="list-group list-group-flush">
+            <% for (const creator of creatorsBySection[section]) { %>
+              <li class="list-group-item d-flex">
+                <div class="flex-shrink-0">
+                  <% if (creator.image) { %>
+                    <img style="height: 50px; width: 50px; object-fit: cover; object-position: center;" src="<%= creator.image %>">
+                  <% } else { %>
+                    <div class="rounded-circle bg-secondary" style="width: 50px; height: 50px;"></div>
+                  <% } %>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h5 class="mb-0"><%= creator.name %></h5>
+                  <p class="m-0"><small class="text-muted"><%= creator.articlecount %> article<%= creator.articlecount > 1 ? 's' : '' %>, avg. <strong><%= creator.avgviews ? creator.avgviews.toLocaleString() : '0' %> views</strong></small></p>
+                </div>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    <% } %>
+  </div>
+<%- include('../partials/footer') %>
