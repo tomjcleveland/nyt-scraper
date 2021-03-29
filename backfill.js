@@ -78,8 +78,14 @@ const getURIs = async (dbClient) => {
     const uris = await getURIs(dbClient);
     logger.info(`Refreshing ${uris.length} articles`);
     for (let uri of uris) {
-      await refreshArticle(dbClient, uri);
-      logger.info(`Refreshed article ${uri}`);
+      try {
+        await refreshArticle(dbClient, uri);
+        logger.info(`Refreshed article ${uri}`);
+      } catch (e) {
+        captureException(e);
+        logger.error(e);
+        logger.error(e.stack);
+      }
       await sleep(SLEEP_INTERVAL);
     }
   } catch (e) {
