@@ -20,6 +20,23 @@ const COLORS = {
   ],
 };
 
+exports.setDifference = (setA, setB) => {
+  let _difference = new Set(setA);
+  for (let elem of setB) {
+    _difference.delete(elem);
+  }
+  return [..._difference];
+};
+
+exports.leftPad = (num, len) => {
+  len = len || 2;
+  let numStr = num.toString();
+  while (numStr.length < 2) {
+    numStr = "0" + numStr;
+  }
+  return numStr;
+};
+
 const archiveUrl = (url) => {
   return `https://archive.today/?run=1&url=${encodeURIComponent(url)}`;
 };

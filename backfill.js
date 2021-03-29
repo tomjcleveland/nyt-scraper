@@ -9,18 +9,17 @@ const {
   upsertTimesTag,
   upsertCreator,
   upsertArticleCreatorMapping,
+  fetchArticleById,
+  fetchAllUrisByMonth,
 } = require("./db");
 const { fetchAllArticlesByMonth } = require("./nyt");
 const { fetchArticleByUri } = require("./nytGraphql");
 const logger = require("./logger");
 const { sentryInit, captureException } = require("./sentry");
-const { sleep } = require("./helpers");
+const { sleep, setDifference } = require("./helpers");
 
 // How long to sleep between GraphQL requests
 const SLEEP_INTERVAL = 3 * 1000;
-
-// How many articles to refresh when this script is run
-const ARTICLES_PER_RUN = 60;
 
 sentryInit();
 
@@ -55,17 +54,29 @@ const refreshArticle = async (dbClient, uri) => {
   await dedupeRevisions(dbClient, uri);
 };
 
+const getURIs = async (dbClient) => {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth() + 1;
+  const articles = await fetchAllArticlesByMonth(year, month);
+  const monthlyUris = articles
+    .filter((a) => a.document_type === "article")
+    .map((a) => a.uri);
+  const dbURIs = await fetchAllUrisByMonth(dbClient, year, month);
+  const newURIs = setDifference(monthlyUris, dbURIs);
+  const refreshURIs = await fetchArticlesToRefresh(dbClient, 50);
+  logger.info(
+    `URIs to refresh: ${newURIs.length} new, ${refreshURIs.length} existing`
+  );
+  return [...new Set([...refreshURIs, ...newURIs])];
+};
+
 (async () => {
   const dbClient = await newDBClient();
   try {
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = now.getUTCMonth() + 1;
-    const articles = await fetchAllArticlesByMonth(year, month);
-    const uris = articles
-      .filter((a) => a.document_type === "article")
-      .map((a) => a.uri);
-    logger.info(`Refreshing ${uris.length} articles for current month`);
+    logger.info("Fetching URIs to refresh...");
+    const uris = await getURIs(dbClient);
+    logger.info(`Refreshing ${uris.length} articles`);
     for (let uri of uris) {
       await refreshArticle(dbClient, uri);
       logger.info(`Refreshed article ${uri}`);

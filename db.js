@@ -7,6 +7,7 @@ dayjs.extend(utc);
 const { idFromUri } = require("./utils");
 const { POPTYPE } = require("./enum");
 const uuidv4 = require("uuid").v4;
+const { leftPad } = require("./helpers");
 
 const NEWS_CATEGORIES = [
   "us",
@@ -257,6 +258,13 @@ exports.upsertTimesTag = async (client, uri, tag) => {
     INSERT INTO nyt.timestags (uri,tag) VALUES ($1,$2)
     ON CONFLICT DO NOTHING`;
   await client.query(query, [uri, tag]);
+};
+
+exports.fetchAllUrisByMonth = async (client, year, month) => {
+  const fullMonth = leftPad(month);
+  const query = `SELECT uri FROM nyt.articles WHERE date_trunc('month', published)=DATE '${year}-${fullMonth}-01'`;
+  const res = await client.query(query);
+  return res.rows.map((r) => r.uri);
 };
 
 exports.fetchArticlesToRefresh = async (client, count) => {
