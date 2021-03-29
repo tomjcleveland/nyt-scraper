@@ -319,7 +319,6 @@ exports.addArticleDetails = async (client, article) => {
     article.subsection || article.subsection?.displayName,
     article.tone,
   ];
-  console.log(args);
   await client.query(query, args);
 };
 
