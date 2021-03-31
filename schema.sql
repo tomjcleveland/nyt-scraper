@@ -321,26 +321,26 @@ AS
     SELECT
       uri,
       SUM(CASE
-        WHEN rank = 1 THEN 4806
-        WHEN rank = 2 THEN 1703
-        WHEN rank = 3 THEN 1325
-        WHEN rank = 4 THEN 1111
-        WHEN rank = 5 THEN 972
-        WHEN rank = 6 THEN 880
-        WHEN rank = 7 THEN 805
-        WHEN rank = 8 THEN 749
-        WHEN rank = 9 THEN 700
-        WHEN rank = 10 THEN 655
-        WHEN rank = 11 THEN 623
-        WHEN rank = 12 THEN 597
-        WHEN rank = 13 THEN 576
-        WHEN rank = 14 THEN 560
-        WHEN rank = 15 THEN 546
-        WHEN rank = 16 THEN 534
-        WHEN rank = 17 THEN 521
-        WHEN rank = 18 THEN 510
-        WHEN rank = 19 THEN 499
-        WHEN rank = 20 THEN 489
+        WHEN rank = 1 THEN 63720
+        WHEN rank = 2 THEN 21844
+        WHEN rank = 3 THEN 15921
+        WHEN rank = 4 THEN 13241
+        WHEN rank = 5 THEN 11617
+        WHEN rank = 6 THEN 10462
+        WHEN rank = 7 THEN 9584
+        WHEN rank = 8 THEN 8878
+        WHEN rank = 9 THEN 8329
+        WHEN rank = 10 THEN 7829
+        WHEN rank = 11 THEN 7431
+        WHEN rank = 12 THEN 7034
+        WHEN rank = 13 THEN 6753
+        WHEN rank = 14 THEN 6483
+        WHEN rank = 15 THEN 6264
+        WHEN rank = 16 THEN 6018
+        WHEN rank = 17 THEN 5829
+        WHEN rank = 18 THEN 5680
+        WHEN rank = 19 THEN 5445
+        WHEN rank = 20 THEN 5352
       END) AS views
     FROM normalizedviews
     GROUP BY 1
@@ -353,7 +353,7 @@ AS
     MIN(COALESCE(cc.emailrank, 21)) AS emailcountmin,
     COUNT(DISTINCT h.headline) AS headlinecount,
     MIN(COALESCE(rc.count, 0)) AS revisioncount,
-    MIN(agt.tags) AS tags
+    MIN(agt.tags) AS tags,
     MIN(v.views) AS views
   FROM
     articlecounts AS ac
