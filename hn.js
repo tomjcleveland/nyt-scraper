@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 const logger = require("./logger");
 const { sentryInit, captureException } = require("./sentry");
 const {
@@ -6,25 +5,9 @@ const {
   newDBClient,
   addNewPageDuration,
 } = require("./db");
+const { fetchNewStories, fetchItem, fetchTopStories } = require("./hackerNews");
 
 sentryInit();
-
-const BASE_URL = "https://hacker-news.firebaseio.com/v0";
-
-const fetchTopStories = async () => {
-  const resp = await fetch(`${BASE_URL}/topstories.json`);
-  return await resp.json();
-};
-
-const fetchNewStories = async () => {
-  const resp = await fetch(`${BASE_URL}/newstories.json`);
-  return await resp.json();
-};
-
-const fetchItem = async (id) => {
-  const resp = await fetch(`${BASE_URL}/item/${id}.json`);
-  return await resp.json();
-};
 
 // In milliseconds
 const fetchNewPageDuration = async () => {

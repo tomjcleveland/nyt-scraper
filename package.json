@@ -1,5 +1,10 @@
 {
+  "scripts": {
+    "start": "node server.js",
+    "bq": "GOOGLE_APPLICATION_CREDENTIALS=gcloud.json node bigQuery.js "
+  },
   "dependencies": {
+    "@google-cloud/bigquery": "^5.5.0",
     "@sentry/node": "^6.1.0",
     "chart.js": "^2.9.4",
     "dayjs": "^1.10.4",
