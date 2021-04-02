@@ -547,6 +547,68 @@ exports.fetchOverallStats = async (client) => {
       ]),
   ];
 
+  const viewsByToneQuery = `
+    SELECT
+      COALESCE(a.tone, 'NO_TONE_SET') AS tone,
+      ROUND(AVG(COALESCE(ast.views, 0))) AS avgviews
+    FROM nyt.articles AS a
+      JOIN nyt.articlestats AS ast
+        ON a.uri=ast.uri
+    GROUP BY 1
+    ORDER BY 2 DESC`;
+  const viewsByToneRes = await client.query(viewsByToneQuery);
+  const viewsByTone = [
+    ["Tone", "Avg. views"],
+    ...viewsByToneRes.rows.map((r) => {
+      return [r.tone, parseInt(r.avgviews, 10)];
+    }),
+  ];
+
+  const viewsBySectionQuery = `
+    SELECT
+      a.section,
+      ROUND(AVG(COALESCE(ast.views, 0))) AS avgviews
+    FROM nyt.articles AS a
+      JOIN nyt.articlestats AS ast
+        ON a.uri=ast.uri
+    GROUP BY 1
+    ORDER BY 2 DESC`;
+  const viewsBySectionRes = await client.query(viewsBySectionQuery);
+  const viewsBySection = [
+    ["Section", "Avg. views"],
+    ...viewsBySectionRes.rows.map((r) => {
+      return [r.section, parseInt(r.avgviews, 10)];
+    }),
+  ];
+
+  const viewsPeriodsScatterQuery = `
+    SELECT
+      a.section,
+      SUM(COALESCE(ast.views, 0)) AS totalviews,
+      SUM(COALESCE(ast.periods, 0)) AS totalperiods
+    FROM nyt.articles AS a
+      JOIN nyt.articlestats AS ast
+        ON a.uri=ast.uri
+    GROUP BY 1
+    ORDER BY 2 DESC`;
+  const viewsPeriodsScatterRes = await client.query(viewsPeriodsScatterQuery);
+  const viewsPeriodsScatter = [
+    [
+      "Total front page time",
+      "Total views",
+      { type: "string", role: "tooltip" },
+    ],
+    ...viewsPeriodsScatterRes.rows
+      // .filter((r) => !["opinion"].includes(r.section))
+      .map((r) => {
+        return [
+          parseInt(r.totalperiods, 10),
+          parseInt(r.totalviews, 10),
+          r.section,
+        ];
+      }),
+  ];
+
   return {
     headlineHistogram,
     daysHistogram,
@@ -567,6 +629,9 @@ exports.fetchOverallStats = async (client) => {
         )
         .map((r) => r.section),
     },
+    viewsByTone,
+    viewsBySection,
+    viewsPeriodsScatter,
   };
 };
 

@@ -516,3 +516,114 @@ FROM authorscores
 WHERE section='opinion'
 ORDER BY 3 DESC
 ```
+
+## Wikipedia data
+
+Okay ideally I'd end up with a results like:
+
+```
+WITH 24trailing AS (
+  SELECT
+    hour,
+    domain,
+    title,
+    SUM(views) OVER (
+      PARTITION BY (domain, title)
+      ORDER BY hour
+      ROWS BETWEEN 23 PRECEDING AND CURRENT ROW
+    ) AS dailyviews
+),
+??? as (
+  24-hour-rank,title,num_views_in_current_hour
+)
+SELECT
+  24-hour-rank,
+  AVG(num_views_in_current_hour)
+GROUP BY 1
+```
+
+## Average new articles/day
+
+```sql
+WITH dailycounts AS (
+  SELECT
+    date_trunc('day', published) AS published,
+    COUNT(*) AS count
+  FROM nyt.articles
+  GROUP BY 1
+)
+SELECT ROUND(AVG(count))
+FROM dailycounts
+WHERE published > DATE '2021-02-15';
+```
+
+## Estimating views
+
+```sql
+WITH normalizedviews AS (
+  SELECT
+    uri,
+    date_trunc('hour', created) + date_part('minute', created)::int / 30 * interval '30 minutes' AS period,
+    AVG(COALESCE(rank, 21)) AS rank
+  FROM nyt.viewrankings
+  GROUP BY 1, 2
+),
+views AS (
+  SELECT
+    uri,
+    SUM(CASE
+      WHEN rank = 1 THEN 4806
+      WHEN rank = 2 THEN 1703
+      WHEN rank = 3 THEN 1325
+      WHEN rank = 4 THEN 1111
+      WHEN rank = 5 THEN 972
+      WHEN rank = 6 THEN 880
+      WHEN rank = 7 THEN 805
+      WHEN rank = 8 THEN 749
+      WHEN rank = 9 THEN 700
+      WHEN rank = 10 THEN 655
+      WHEN rank = 11 THEN 623
+      WHEN rank = 12 THEN 597
+      WHEN rank = 13 THEN 576
+      WHEN rank = 14 THEN 560
+      WHEN rank = 15 THEN 546
+      WHEN rank = 16 THEN 534
+      WHEN rank = 17 THEN 521
+      WHEN rank = 18 THEN 510
+      WHEN rank = 19 THEN 499
+      WHEN rank = 20 THEN 489
+    END) AS views
+  FROM normalizedviews
+  GROUP BY 1
+)
+SELECT
+  a.headline,
+  v.views
+FROM views AS v
+  JOIN nyt.articles AS a ON a.uri=v.uri
+ORDER BY views DESC LIMIT 10;
+```
+
+```sql
+SELECT
+  a.tone,
+  ROUND(AVG(ast.views)) AS avgviews,
+  ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ast.views)) AS medianviews
+FROM nyt.articles AS a
+  JOIN nyt.articlestats AS ast
+    ON a.uri=ast.uri
+GROUP BY 1
+ORDER BY 2 DESC
+```
+
+```sql
+SELECT
+  a.section,
+  SUM(COALESCE(ast.views, 0)) AS totalviews,
+  SUM(COALESCE(ast.periods, 0)) AS totalperiods
+FROM nyt.articles AS a
+  JOIN nyt.articlestats AS ast
+    ON a.uri=ast.uri
+GROUP BY 1
+ORDER BY 2 DESC
+```

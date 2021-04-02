@@ -80,6 +80,26 @@
     </div> -->
   </div>
 
+  <div class="row">
+    <div class="col-md-6">
+      <h3 id="views-by-tone" class="mt-4">Views by tone</h3>
+      <div id="views-by-tone-chart"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 id="views-by-section" class="mt-4">Views by section</h3>
+      <div id="views-by-section-chart"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h3 id="views-periods-scatter" class="mt-4">Front page time vs. views, by section</h3>
+      <div class="aspect aspect-3-2 shadow-sm">
+        <div class="aspect-contents" id="views-periods-scatter-chart"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const {
       pieChart,
@@ -90,7 +110,10 @@
       frontPageBySection,
       frontPageByCategory,
       frontPageByTag,
-      frontPageByTone
+      frontPageByTone,
+      viewsByTone,
+      viewsBySection,
+      viewsPeriodsScatter,
     } = JSON.parse('<%- JSON.stringify(stats) %>');
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
@@ -225,6 +248,64 @@
         }
       };
       chartFrontPageByTone.draw(dataFrontPageByTone, optionsFrontPageByTone);
+
+      const dataViewsByTone = new google.visualization.arrayToDataTable(viewsByTone);
+      const chartViewsByTone = new google.visualization.ColumnChart(document.getElementById('views-by-tone-chart'));
+      const optionsViewsByTone = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: 'Avg. # of views',
+        },
+        hAxis: {
+          title: 'Tone',
+        },
+        chartArea: {
+          height: '70%',
+        }
+      };
+      chartViewsByTone.draw(dataViewsByTone, optionsViewsByTone);
+
+      const dataViewsBySection = new google.visualization.arrayToDataTable(viewsBySection);
+      const chartViewsBySection = new google.visualization.ColumnChart(document.getElementById('views-by-section-chart'));
+      const optionsViewsBySection = {
+        legend: { position: "none" },
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: 'Avg. # of views',
+        },
+        hAxis: {
+          title: 'Section',
+        },
+        chartArea: {
+          height: '70%',
+        }
+      };
+      chartViewsBySection.draw(dataViewsBySection, optionsViewsBySection);
+
+      const dataViewsPeriodsScatter = new google.visualization.arrayToDataTable(viewsPeriodsScatter);
+      const chartViewsPeriodsScatter = new google.visualization.ScatterChart(document.getElementById('views-periods-scatter-chart'));
+      const optionsViewsPeriodsScatter = {
+        colors: window.COLORS.FULL,
+        vAxis: {
+          title: 'Total views',
+        },
+        hAxis: {
+          title: 'Total front page time',
+        },
+        chartArea: {
+          height: '70%'
+        },
+        trendlines: {
+          0: {
+            visibleInLegend: true,
+            showR2: true,
+            // type: 'polynomial',
+            // degree: 2,
+          },
+        },
+      };
+      chartViewsPeriodsScatter.draw(dataViewsPeriodsScatter, optionsViewsPeriodsScatter);
     }
   </script>
 <%- include('../partials/footer') %>
