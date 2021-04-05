@@ -320,7 +320,7 @@ exports.addArticleDetails = async (client, article) => {
     article.headline?.print_headline || article.printInformation?.headline,
     article.pub_date ? new Date(article.pub_date) : article.published,
     article.byline?.original || article.bylines?.[0]?.renderedRepresentation,
-    parseInt(article.wordCount, 10) || parseInt(article.word_count, 10),
+    parseInt(article.wordCount, 10) || parseInt(article.word_count, 10) || null,
     article.refreshedat,
     article.desk || article.news_desk,
     article.section || article.section_name,
