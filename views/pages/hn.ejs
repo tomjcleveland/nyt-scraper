@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+
+    <link rel="icon" type="image/png" href="/img/favicon.png" />
+    
+    <link href="/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl">
+    <link href="/css/custom.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+
+    <script async defer data-domain="nyt.tjcx.me" src="https://analytics.tjcx.me/js/plausible.js"></script>
+
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= canonicalUrl %>" />
+    <meta property="og:image" content="<%= imageUrl %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:site_name" content="NYT Tracker" />
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@tomjcleveland">
+    <meta name="twitter:title" content="<%= title %>">
+    <meta name="twitter:description" content="<%= description %>">
+    <meta name="twitter:image:src" content="<%= imageUrl %>">
+  </head>
+  <body>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>google.charts.load('current', {'packages':['corechart']});</script>
+
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <h1>Hacker News</h1>
+          <p>Posts submitted now typically have a <strong><%= Math.round(100 * (hnData.currData.numfrontpage / hnData.currData.numtotal)) %>% chance</strong> of making it to the front page.</p>
+          <p>The best time to post is <strong><%= hnData.bestData.formattedDay %> between <%= hnData.bestData.formattedHour %></strong>.</p>
+          <div class="aspect aspect-16-9">
+            <div class="aspect-contents" id="hn-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        A project by <strong><a href="https://tjcx.me">TJCX</a></strong> &bull; <a href="mailto:tom@tjcx.me">tom@tjcx.me</a>
+      </footer>
+    </div>
+
+    <script>
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        const dataParsed = JSON.parse(`<%- JSON.stringify(hnData.dataTable) %>`);
+        const dataHN = new google.visualization.arrayToDataTable(dataParsed);
+        const chartHN = new google.visualization.LineChart(document.getElementById('hn-chart'));
+        const optionsHN = {
+          vAxis: {
+            title: '% on front page',
+          },
+          hAxis: {
+            title: 'Hour',
+          },
+          series: {
+            0: {targetAxisIndex: 0},
+            1: {targetAxisIndex: 1}
+          },
+          vAxes: {
+            0: {title: '% on front page'},
+            1: {title: "'new' page duration"}
+          },
+          chartArea: {
+            height: '70%'
+          }
+        };
+        chartHN.draw(dataHN, optionsHN);
+      }
+    </script>
+    
+    <script src="/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"></script>
+  </body>
+</html>

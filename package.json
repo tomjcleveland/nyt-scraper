@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "node server.js",
+    "start": "GOOGLE_APPLICATION_CREDENTIALS=gcloud.json node server.js",
     "bq": "GOOGLE_APPLICATION_CREDENTIALS=gcloud.json node bigQuery.js "
   },
   "dependencies": {

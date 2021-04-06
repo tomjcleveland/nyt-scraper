@@ -1,0 +1,50 @@
+body {
+  background-color: #e5e7eb;
+}
+
+footer {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.aspect {
+  height: 0;
+  overflow: hidden;
+  background: white;
+  position: relative;
+}
+
+.aspect-1-1 {
+  padding-top: 100%;
+}
+
+.aspect-3-2 {
+  padding-top: 66.6%;
+}
+
+.aspect-16-9 {
+  padding-top: 36%;
+}
+
+.aspect-contents {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rank-bar {
+  width: 60px;
+  height: 4px;
+  margin-bottom: 2px;
+  background-color: #e5e7eb;
+}
+
+.rank-bar-selected {
+  height: 8px;
+}
+
+.d2h-code-line-ctn {
+  white-space: normal;
+}

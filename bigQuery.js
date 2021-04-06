@@ -1,6 +1,6 @@
 const logger = require("./logger");
 const { sentryInit, captureException } = require("./sentry");
-const { BigQuery, Dataset } = require("@google-cloud/bigquery");
+const { BigQuery } = require("@google-cloud/bigquery");
 const { fetchTopStories, fetchNewStories, fetchItem } = require("./hackerNews");
 
 sentryInit();

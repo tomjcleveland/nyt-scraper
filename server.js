@@ -22,6 +22,7 @@ const logger = require("./logger");
 const { idFromUri } = require("./utils");
 const Sentry = require("@sentry/node");
 const { sentryInit } = require("./sentry");
+const { fetchPostingDifficultyData } = require("./hackerNews");
 
 sentryInit();
 const app = express();
@@ -238,6 +239,16 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
+  app.get("/hn", async (req, res) => {
+    const hnData = await fetchPostingDifficultyData();
+    renderPage(req, res, "pages/hn", {
+      hnData,
+      title: "When to post to Hacker News",
+      description:
+        "Use live data to determine the best time to post to Hacker News.",
+    });
+  });
+
   app.get("/health", async (req, res) => {
     res.send();
   });
@@ -246,34 +257,3 @@ const renderPage = (req, res, path, vars) => {
     logger.info(`nyt-headlines app listening on :${port}`);
   });
 })();
-
-const popularityRowsToDataTable = (rows) => {
-  const headlines = [...new Set(rows.map((row) => row.headline))];
-  const rowsByDate = {};
-  for (let row of rows) {
-    const idx = headlines.indexOf(row.headline);
-    const dateFormatted = row.hour.toISOString();
-    let dataRow = rowsByDate[dateFormatted];
-    if (!dataRow) {
-      dataRow = [];
-      let headlineLength = headlines.length;
-      while (headlineLength--) dataRow.push(null);
-    }
-    dataRow[idx] = { v: parseInt(row.rank, 10) * -1, f: row.rank };
-    rowsByDate[dateFormatted] = dataRow;
-  }
-
-  const data = [["Headline", ...headlines]];
-  for (let key in rowsByDate) {
-    data.push([key, ...rowsByDate[key]]);
-  }
-  return data;
-};
-
-const popularityRowsToHeadlines = (rows) => {
-  rows.sort((a, b) => b.hour - a.hour);
-  const latestFetchDate = rows[0].hour;
-  return rows
-    .filter((r) => r.hour.getTime() === latestFetchDate.getTime())
-    .map((h) => ({ id: idFromUri(h.uri), ...h }));
-};
