@@ -18,18 +18,28 @@ const DAYS_OF_WEEK = [
   "Saturday",
 ];
 
+const assert200 = async (resp) => {
+  if (resp.status !== 200) {
+    const body = resp.text();
+    throw new Error(`Unexpected status code ${resp.status}: ${body}`);
+  }
+};
+
 exports.fetchTopStories = async () => {
   const resp = await fetch(`${BASE_URL}/topstories.json`);
+  await assert200(resp);
   return await resp.json();
 };
 
 exports.fetchNewStories = async () => {
   const resp = await fetch(`${BASE_URL}/newstories.json`);
+  await assert200(resp);
   return await resp.json();
 };
 
 exports.fetchItem = async (id) => {
   const resp = await fetch(`${BASE_URL}/item/${id}.json`);
+  await assert200(resp);
   return await resp.json();
 };
 
