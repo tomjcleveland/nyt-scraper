@@ -239,16 +239,6 @@ const renderPage = (req, res, path, vars) => {
     });
   });
 
-  app.get("/hn", async (req, res) => {
-    const hnData = await fetchPostingDifficultyData();
-    renderPage(req, res, "pages/hn", {
-      hnData,
-      title: "When to post to Hacker News",
-      description:
-        "Use live data to determine the best time to post to Hacker News.",
-    });
-  });
-
   app.get("/health", async (req, res) => {
     res.send();
   });
