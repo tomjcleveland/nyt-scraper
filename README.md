@@ -100,9 +100,9 @@ This project uses several cron jobs.
 These cron jobs run the scraping scripts on a specified interval, so that we can have time-series data:
 
 ```
-*/1 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production node crawl.js >> /var/log/nyt/cron.log 2&>1
-35 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production node getPopularity.js >> /var/log/nyt/popularity.log 2&>1
-49 */1 * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production node backfill.js >> /var/log/nyt/backfill.log 2&>1
+*/1 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node crawl.js >> /var/log/nyt/cron.log 2&>1
+35 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node getPopularity.js >> /var/log/nyt/popularity.log 2&>1
+49 */1 * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node backfill.js >> /var/log/nyt/backfill.log 2&>1
 ```
 
 ### Web server cron jobs
