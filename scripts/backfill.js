@@ -21,6 +21,9 @@ const { sleep, setDifference } = require("../lib/helpers");
 // How long to sleep between GraphQL requests
 const SLEEP_INTERVAL = 3 * 1000;
 
+// How many articles should we update each run?
+const SAMPLE_COUNT = 50;
+
 sentryInit();
 
 const refreshArticle = async (dbClient, uri) => {
@@ -64,7 +67,7 @@ const getURIs = async (dbClient) => {
     .map((a) => a.uri);
   const dbURIs = await fetchAllUrisByMonth(dbClient, year, month);
   const newURIs = setDifference(monthlyUris, dbURIs);
-  const refreshURIs = await fetchArticlesToRefresh(dbClient, 50);
+  const refreshURIs = await fetchArticlesToRefresh(dbClient, SAMPLE_COUNT);
   logger.info(
     `URIs to refresh: ${newURIs.length} new, ${refreshURIs.length} existing`
   );

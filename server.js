@@ -40,7 +40,7 @@ const renderPage = (req, res, path, vars) => {
     // I can't for the life of me figure out
     // how to get the original hostname after
     // the ALB forwards the request
-    baseUrl = "https://nyt.tjcx.me";
+    baseUrl = process.env.BASE_URL;
   }
   const title =
     vars?.title ||
