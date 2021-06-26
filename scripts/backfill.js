@@ -11,12 +11,12 @@ const {
   upsertArticleCreatorMapping,
   fetchArticleById,
   fetchAllUrisByMonth,
-} = require("./db");
-const { fetchAllArticlesByMonth } = require("./nyt");
-const { fetchArticleByUri } = require("./nytGraphql");
-const logger = require("./logger");
-const { sentryInit, captureException } = require("./sentry");
-const { sleep, setDifference } = require("./helpers");
+} = require("../lib/db");
+const { fetchAllArticlesByMonth } = require("../lib/nyt");
+const { fetchArticleByUri } = require("../lib/nytGraphql");
+const logger = require("../lib/logger");
+const { sentryInit, captureException } = require("../lib/sentry");
+const { sleep, setDifference } = require("../lib/helpers");
 
 // How long to sleep between GraphQL requests
 const SLEEP_INTERVAL = 3 * 1000;

@@ -14,15 +14,15 @@ const {
   fetchDiff,
   fetchArticleCreators,
   fetchMostPopularCreators,
-} = require("./db");
-const { TONE } = require("./types");
-const { getExpressLocals, COLORS } = require("./helpers");
-const { POPTYPE } = require("./enum");
-const logger = require("./logger");
-const { idFromUri } = require("./utils");
+} = require("./lib/db");
+const { TONE } = require("./lib/types");
+const { getExpressLocals, COLORS } = require("./lib/helpers");
+const { POPTYPE } = require("./lib/enum");
+const logger = require("./lib/logger");
+const { idFromUri } = require("./lib/utils");
 const Sentry = require("@sentry/node");
-const { sentryInit } = require("./sentry");
-const { fetchPostingDifficultyData } = require("./hackerNews");
+const { sentryInit } = require("./lib/sentry");
+const { fetchPostingDifficultyData } = require("./lib/hackerNews");
 
 sentryInit();
 const app = express();

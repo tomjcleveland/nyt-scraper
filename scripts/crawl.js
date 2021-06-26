@@ -6,16 +6,16 @@ const {
   fetchArticleDetailsByUrl,
   addArticleDetails,
   fetchLatestArticles,
-} = require("./db");
+} = require("../lib/db");
 const UserAgent = require("user-agents");
-const logger = require("./logger");
-const { sentryInit, captureException } = require("./sentry");
+const logger = require("../lib/logger");
+const { sentryInit, captureException } = require("../lib/sentry");
 const {
   fetchArticleByUri,
   fetchArticleByUrl,
   upsertArticleByUri,
   upsertArticleByUrl,
-} = require("./nyt");
+} = require("../lib/nyt");
 
 sentryInit();
 

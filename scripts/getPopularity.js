@@ -1,8 +1,8 @@
-const { newDBClient, insertPopularityData } = require("./db");
-const logger = require("./logger");
-const { fetchPopularArticles, upsertArticleByUri } = require("./nyt");
-const { POPTYPE } = require("./enum");
-const { sentryInit, captureException } = require("./sentry");
+const { newDBClient, insertPopularityData } = require("../lib/db");
+const logger = require("../lib/logger");
+const { fetchPopularArticles, upsertArticleByUri } = require("../lib/nyt");
+const { POPTYPE } = require("../lib/enum");
+const { sentryInit, captureException } = require("../lib/sentry");
 
 const updatePopularityData = async () => {
   const dbClient = await newDBClient();
