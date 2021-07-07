@@ -18,6 +18,7 @@ Prerequisites:
 - A Postgres database with the correct schema (see [Postgres database](#postgres-database))
 - Node 14.5+
 - Yarn 1.22+
+- An API key for the [official New York Times API](https://developer.nytimes.com/)
 
 ```
 $ git clone https://github.com/tomjcleveland/nyt-scraper.git
@@ -27,7 +28,8 @@ $ export PGUSER=nyt_app \
   PGHOST=<HOSTNAME> \
   PGPASSWORD=<PASSWORD> \
   PGDATABASE=nyt \
-  PGPORT=5432
+  PGPORT=5432 \
+  NYT_KEY=<NYT_API_KEY>
 $ node crawl.js
 ```
 
@@ -100,9 +102,9 @@ This project uses several cron jobs.
 These cron jobs run the scraping scripts on a specified interval, so that we can have time-series data:
 
 ```
-*/1 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node crawl.js >> /var/log/nyt/cron.log 2&>1
-35 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node getPopularity.js >> /var/log/nyt/popularity.log 2&>1
-49 */1 * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 node backfill.js >> /var/log/nyt/backfill.log 2&>1
+*/1 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 NYT_KEY=<NYT_API_KEY> node crawl.js >> /var/log/nyt/cron.log 2&>1
+35 * * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 NYT_KEY=<NYT_API_KEY> node getPopularity.js >> /var/log/nyt/popularity.log 2&>1
+49 */1 * * * cd /home/ubuntu/nyt-scraper && NODE_ENV=production PGUSER=nyt_app PGHOST=<HOSTNAME> PGPASSWORD=<PASSWORD> PGDATABASE=nyt PGPORT=5432 NYT_KEY=<NYT_API_KEY> node backfill.js >> /var/log/nyt/backfill.log 2&>1
 ```
 
 ### Web server cron jobs
