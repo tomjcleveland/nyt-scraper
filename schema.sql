@@ -104,46 +104,6 @@ CREATE TRIGGER update_articles_transaction_columns BEFORE UPDATE ON articles FOR
 
 CREATE INDEX article_search_idx ON articles USING GIN (tsv);
 
-CREATE OR REPLACE FUNCTION refreshSearchIndex() RETURNS void AS $$
-  WITH uniqueheadlines AS (
-    SELECT
-      uri,
-      headline
-    FROM headlines
-    GROUP BY 1, 2
-  ),
-  headlineblobs AS (
-    SELECT
-      uri,
-      STRING_AGG(headline, ' ') AS headlines
-    FROM uniqueheadlines
-    GROUP BY 1
-  ),
-  latestbodytimes AS (
-    SELECT
-      uri,
-      MAX(created) AS created
-    FROM articlerevisions
-    GROUP BY 1
-  ),
-  latestbodies AS (
-    SELECT
-      r.uri,
-      r.body
-    FROM articlerevisions AS r
-      INNER JOIN latestbodytimes AS lbt
-        ON (r.uri=lbt.uri AND r.created=lbt.created)
-  )
-  UPDATE
-    articles
-  SET tsv=to_tsvector('english', COALESCE(hb.headlines, '') || COALESCE(lb.body, ''))
-  FROM articles AS a
-    LEFT JOIN headlineblobs AS hb ON hb.uri=a.uri
-    LEFT JOIN latestbodies AS lb ON lb.uri=a.uri
-  WHERE articles.uri=a.uri
-$$
-LANGUAGE sql;
-
 -- View Rankings
 
 CREATE TABLE viewrankings
@@ -222,6 +182,48 @@ CREATE TABLE articlescreators
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     UNIQUE (articleuri, creatoruri)
 );
+
+-- Search index refresh function
+
+CREATE OR REPLACE FUNCTION refreshSearchIndex() RETURNS void AS $$
+  WITH uniqueheadlines AS (
+    SELECT
+      uri,
+      headline
+    FROM headlines
+    GROUP BY 1, 2
+  ),
+  headlineblobs AS (
+    SELECT
+      uri,
+      STRING_AGG(headline, ' ') AS headlines
+    FROM uniqueheadlines
+    GROUP BY 1
+  ),
+  latestbodytimes AS (
+    SELECT
+      uri,
+      MAX(created) AS created
+    FROM articlerevisions
+    GROUP BY 1
+  ),
+  latestbodies AS (
+    SELECT
+      r.uri,
+      r.body
+    FROM articlerevisions AS r
+      INNER JOIN latestbodytimes AS lbt
+        ON (r.uri=lbt.uri AND r.created=lbt.created)
+  )
+  UPDATE
+    articles
+  SET tsv=to_tsvector('english', COALESCE(hb.headlines, '') || COALESCE(lb.body, ''))
+  FROM articles AS a
+    LEFT JOIN headlineblobs AS hb ON hb.uri=a.uri
+    LEFT JOIN latestbodies AS lb ON lb.uri=a.uri
+  WHERE articles.uri=a.uri
+$$
+LANGUAGE sql;
 
 ------------------------
 -- MATERIALIZED VIEWS --
