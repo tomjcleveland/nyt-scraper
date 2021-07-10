@@ -130,5 +130,6 @@ You'll also need to add a password for the `nyt_app` user, which your scripts wi
 
 ```
 $ psql -h <HOSTNNAME> -U postgres -d nyt
+=> ALTER ROLE nyt_app WITH LOGIN;
 => ALTER ROLE nyt_app WITH PASSWORD 'mysupersecretpasssword';
 ```

@@ -60,6 +60,7 @@ CREATE TABLE headlines
     lastmodified TIMESTAMP WITH TIME ZONE,
     tone TEXT,
     retrieved TIMESTAMP WITH TIME ZONE,
+    snapshotid TEXT NOT NULL,
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
@@ -94,7 +95,7 @@ CREATE TABLE articles
     tone TEXT,
     tsv TSVECTOR,
     deletedat TIMESTAMP WITH TIME ZONE,
-    refreshedat TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
+    refreshedat TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp(),
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
