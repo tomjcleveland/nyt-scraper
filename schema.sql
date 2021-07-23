@@ -51,7 +51,8 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE TABLE headlines
 (
-    id TEXT PRIMARY KEY,
+    snapshotid TEXT PRIMARY KEY,
+    id TEXT,
     sourceid TEXT,
     headline TEXT,
     summary TEXT,
@@ -60,7 +61,6 @@ CREATE TABLE headlines
     lastmodified TIMESTAMP WITH TIME ZONE,
     tone TEXT,
     retrieved TIMESTAMP WITH TIME ZONE,
-    snapshotid TEXT NOT NULL,
     created TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL,
     updated TIMESTAMP WITH TIME ZONE DEFAULT transaction_timestamp() NOT NULL
 );
@@ -70,6 +70,7 @@ CREATE TRIGGER update_headlines_transaction_columns BEFORE UPDATE ON headlines F
 
 CREATE INDEX headlines_search_idx ON headlines USING GIN (to_tsvector('english', headline));
 CREATE INDEX headlines_retrieved ON headlines (retrieved);
+CREATE INDEX headlines_uri ON headlines USING btree (uri);
 
 -- CREATE TRIGGER headlines_refresh_articlestats AFTER INSERT OR UPDATE OR DELETE
 -- ON headlines
